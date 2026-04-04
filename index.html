@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Círculo de Sabores</title>
+    <meta
+      name="description"
+      content="Círculo de Sabores: compra por unidad o packs con delivery desde 4 unidades combinables."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app" class="app-shell">
+      <header class="top-nav">
+        <img src="/images/logo.png" alt="Logo Círculo de Sabores" class="logo" />
+        <div class="nav-icons">
+          <button class="icon-btn" aria-label="Buscar en catálogo" data-action="focus-search">🔍</button>
+          <button class="icon-btn" aria-label="Abrir menú">☰</button>
+        </div>
+      </header>
+
+      <main class="view-container" aria-live="polite">
+        <section class="view active intro-view" data-view="intro" aria-label="Pantalla de inicio">
+          <p class="intro-brand">J&amp;C</p>
+        </section>
+
+        <section class="view" data-view="home" aria-label="Catálogo">
+          <div class="panel home-panel">
+            <p class="badge">Compra inclusiva: sin mínimo en tienda física</p>
+            <h1>Productos saludables que sí saben a postre</h1>
+            <button class="btn primary" data-action="focus-search">Ver opciones</button>
+
+            <div class="rules-card">
+              <p>Venta por unidad y packs (4 y 8 con descuento).</p>
+              <p class="persistent-rule">Delivery disponible desde 4 unidades combinables.</p>
+              <p>Pedidos personalizados por encargo.</p>
+            </div>
+
+            <div class="search-filters">
+              <input type="search" id="searchInput" placeholder="Buscar producto" autocomplete="off" />
+              <div id="tagFilters" class="tags"></div>
+            </div>
+
+            <div class="delivery-progress">
+              <div class="progress-text" id="deliveryProgressText"></div>
+              <div class="progress-bar" aria-label="Progreso de delivery"><span id="deliveryProgressFill"></span></div>
+            </div>
+
+            <div id="catalogGrid" class="catalog-grid"></div>
+            <div class="catalog-nav">
+              <button class="btn" id="prevPageBtn" type="button">Anterior</button>
+              <small id="catalogPageText">Página 1</small>
+              <button class="btn" id="nextPageBtn" type="button">Siguiente</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="producto" aria-label="Detalle de producto">
+          <div class="panel" id="productDetail"></div>
+        </section>
+
+        <section class="view" data-view="carrito" aria-label="Carrito">
+          <div class="panel">
+            <h2>Tu carrito</h2>
+            <div id="cartList" class="stack"></div>
+            <div class="totals">
+              <p>Total unidades: <strong id="cartUnits">0</strong></p>
+              <p>Total: <strong id="cartTotal">$0</strong></p>
+              <p id="deliveryStatus" class="delivery-status"></p>
+            </div>
+            <button class="btn primary" data-action="go-checkout">Continuar al checkout</button>
+          </div>
+        </section>
+
+        <section class="view" data-view="checkout" aria-label="Checkout">
+          <div class="panel">
+            <h2>Checkout rápido</h2>
+            <form id="checkoutForm" class="stack" novalidate>
+              <input name="name" required placeholder="Nombre" maxlength="60" />
+              <input name="address" required placeholder="Dirección" maxlength="120" />
+              <div class="radio-group">
+                <label><input type="radio" name="method" value="retiro" checked /> Retiro</label>
+                <label id="deliveryRadioWrap"><input type="radio" name="method" value="delivery" /> Delivery</label>
+              </div>
+              <p id="checkoutRule" class="delivery-status"></p>
+              <button class="btn primary" id="confirmOrderBtn" type="submit">Confirmar pedido</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" data-view="encargos" aria-label="Pedidos por encargo">
+          <div class="panel">
+            <h2>Pedidos por encargo</h2>
+            <form id="customOrderForm" class="stack" novalidate>
+              <input name="type" required placeholder="Tipo de producto" maxlength="80" />
+              <input name="qty" required type="number" min="1" max="999" placeholder="Cantidad" />
+              <input name="date" required type="date" />
+              <textarea name="notes" rows="3" maxlength="240" placeholder="Notas"></textarea>
+              <button class="btn primary" type="submit">Enviar por WhatsApp</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="view" data-view="confirmacion" aria-label="Confirmación">
+          <div class="panel center">
+            <h2>Pedido recibido</h2>
+            <p>Gracias por elegir Círculo de Sabores.</p>
+            <button class="btn primary" data-action="go-home">Volver a inicio</button>
+          </div>
+        </section>
+      </main>
+
+      <aside class="floating-cart" id="floatingCart" role="button" tabindex="0" aria-label="Ir al carrito">
+        <span id="floatingQty">0 u</span>
+        <strong id="floatingTotal">$0</strong>
+      </aside>
+
+      <footer class="bottom-nav">
+        <button data-nav="home" type="button">Inicio</button>
+        <button data-nav="encargos" type="button">Encargos</button>
+        <button data-nav="carrito" type="button">Carrito</button>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
