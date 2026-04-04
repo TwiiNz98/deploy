@@ -16,21 +16,55 @@
 
   <!-- NAVBAR -->
   <nav id="navbar" class="navbar" style="display:none">
-    <button class="nav-logo-btn" onclick="App.navigate('home')">
-      <img src="images/logo.png" alt="Círculo de Sabores" class="nav-logo"
-           onerror="this.style.display='none';document.getElementById('nav-brand').style.display='flex'" />
-      <span id="nav-brand" class="nav-brand" style="display:none">🌿 Círculo</span>
+    <button class="nav-logo-btn" id="nav-logo-btn" onclick="App._logoClick()">
+      <span class="nav-brand-text">Círculo de Sabores</span>
     </button>
     <div class="nav-actions">
-      <button class="nav-btn" onclick="App.navigate('encargos')" title="Encargos">
-        <i class="fa-solid fa-clipboard-list"></i>
-      </button>
-      <button class="nav-btn cart-btn" onclick="App.navigate('carrito')" title="Carrito">
-        <i class="fa-solid fa-bag-shopping"></i>
-        <span id="cart-badge" class="cart-badge hidden">0</span>
+      <div id="cart-badge-nav" class="cart-badge-nav hidden">0</div>
+      <button class="nav-btn ham-btn" id="ham-btn" onclick="App.toggleMenu()" title="Menú">
+        <i class="fa-solid fa-bars"></i>
       </button>
     </div>
   </nav>
+
+  <!-- HAMBURGER OVERLAY -->
+  <div class="ham-overlay" id="ham-overlay" onclick="App.closeMenu()"></div>
+
+  <!-- HAMBURGER MENU PANEL -->
+  <div class="ham-menu" id="ham-menu">
+    <div class="ham-menu-header">
+      <span class="ham-menu-logo">🌿 Círculo de Sabores</span>
+      <button class="ham-close-btn" onclick="App.closeMenu()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <nav class="ham-nav-links">
+      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('home')">
+        <i class="fa-solid fa-store"></i>
+        <span>Ver Productos</span>
+        <i class="fa-solid fa-chevron-right ham-arrow"></i>
+      </button>
+      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('encargos')">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Realizar Encargos</span>
+        <i class="fa-solid fa-chevron-right ham-arrow"></i>
+      </button>
+      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('carrito')">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span>Mi Carrito</span>
+        <i class="fa-solid fa-chevron-right ham-arrow"></i>
+      </button>
+    </nav>
+    <div class="ham-divider"></div>
+    <div class="ham-social">
+      <a href="https://instagram.com/circulodesabores_cl" target="_blank" rel="noopener" class="ham-social-btn ham-ig">
+        <i class="fa-brands fa-instagram"></i>
+      </a>
+      <a href="https://wa.me/56950147783" target="_blank" rel="noopener" class="ham-social-btn ham-wa">
+        <i class="fa-brands fa-whatsapp"></i>
+      </a>
+    </div>
+  </div>
 
   <!-- APP CONTAINER -->
   <main id="app" class="app-container"></main>
@@ -51,6 +85,38 @@
       <span id="foot-cart-count" class="foot-cart-count hidden">0</span>
     </button>
   </footer>
+
+  <!-- ADMIN PANEL OVERLAY -->
+  <div class="admin-panel" id="admin-panel" style="display:none">
+    <div class="admin-header">
+      <button class="admin-back-btn" onclick="Admin.close()">
+        <i class="fa-solid fa-chevron-left"></i> Salir
+      </button>
+      <h2 class="admin-title">⚙️ Panel Admin</h2>
+      <div></div>
+    </div>
+    <div class="admin-tabs-bar" id="admin-tabs-bar">
+      <button class="admin-tab active" onclick="Admin.showTab('productos', this)">
+        <i class="fa-solid fa-box-open"></i> Productos
+      </button>
+      <button class="admin-tab" onclick="Admin.showTab('imagenes', this)">
+        <i class="fa-solid fa-images"></i> Imágenes
+      </button>
+      <button class="admin-tab" onclick="Admin.showTab('metodos', this)">
+        <i class="fa-solid fa-truck"></i> Métodos
+      </button>
+      <button class="admin-tab" onclick="Admin.showTab('contenido', this)">
+        <i class="fa-solid fa-pen-to-square"></i> Contenido
+      </button>
+    </div>
+    <div class="admin-body" id="admin-body">
+      <!-- Populated by Admin.showTab() -->
+    </div>
+  </div>
+
+  <!-- Hidden file input for image uploads -->
+  <input type="file" id="file-upload-hero" accept="image/*" multiple style="display:none" onchange="Admin.onHeroImagesSelected(this)" />
+  <input type="file" id="file-upload-product" accept="image/*" multiple style="display:none" onchange="Admin.onProductImagesSelected(this)" />
 
   <script src="app.js"></script>
 </body>
