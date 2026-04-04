@@ -1,121 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Círculo de Sabores</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="app" class="app-shell">
-      <header class="top-nav">
-        <img src="/images/logo.png" alt="Logo Círculo de Sabores" class="logo" />
-        <div class="nav-icons">
-          <button class="icon-btn" aria-label="Buscar">🔍</button>
-          <button class="icon-btn" aria-label="Menú">☰</button>
-        </div>
-      </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#F5E9DA" />
+  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento." />
+  <title>Círculo de Sabores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
 
-      <main class="view-container">
-        <section class="view active intro-view" data-view="intro">
-          <p class="intro-brand">J&amp;C</p>
-        </section>
-
-        <section class="view" data-view="home">
-          <div class="panel">
-            <p class="badge">Compra inclusiva: sin mínimo en tienda física</p>
-            <h1>Productos saludables que sí saben a postre</h1>
-            <button class="btn primary" data-action="jump-catalog">Ver opciones</button>
-
-            <div class="rules-card">
-              <p>Venta por unidad y packs (4 y 8 con descuento).</p>
-              <p class="persistent-rule">Delivery disponible desde 4 unidades combinables.</p>
-              <p>Pedidos personalizados por encargo.</p>
-            </div>
-
-            <div class="search-filters" id="catalog-anchor">
-              <input type="search" id="searchInput" placeholder="Buscar producto" />
-              <div id="tagFilters" class="tags"></div>
-            </div>
-
-            <div class="delivery-progress">
-              <div class="progress-text" id="deliveryProgressText"></div>
-              <div class="progress-bar"><span id="deliveryProgressFill"></span></div>
-            </div>
-
-            <div id="catalogGrid" class="catalog-grid"></div>
-          </div>
-        </section>
-
-        <section class="view" data-view="producto">
-          <div class="panel" id="productDetail"></div>
-        </section>
-
-        <section class="view" data-view="carrito">
-          <div class="panel">
-            <h2>Tu carrito</h2>
-            <div id="cartList" class="stack"></div>
-            <div class="totals">
-              <p>Total unidades: <strong id="cartUnits">0</strong></p>
-              <p>Total: <strong id="cartTotal">$0</strong></p>
-              <p id="deliveryStatus" class="delivery-status"></p>
-            </div>
-            <button class="btn primary" data-action="go-checkout">Continuar al checkout</button>
-          </div>
-        </section>
-
-        <section class="view" data-view="checkout">
-          <div class="panel">
-            <h2>Checkout rápido</h2>
-            <form id="checkoutForm" class="stack">
-              <input name="name" required placeholder="Nombre" />
-              <input name="address" required placeholder="Dirección" />
-              <div class="radio-group">
-                <label><input type="radio" name="method" value="retiro" checked /> Retiro</label>
-                <label id="deliveryRadioWrap"
-                  ><input type="radio" name="method" value="delivery" /> Delivery</label
-                >
-              </div>
-              <p id="checkoutRule" class="delivery-status"></p>
-              <button class="btn primary" type="submit">Confirmar pedido</button>
-            </form>
-          </div>
-        </section>
-
-        <section class="view" data-view="encargos">
-          <div class="panel">
-            <h2>Pedidos por encargo</h2>
-            <form id="customOrderForm" class="stack">
-              <input name="type" required placeholder="Tipo de producto" />
-              <input name="qty" required type="number" min="1" placeholder="Cantidad" />
-              <input name="date" required type="date" />
-              <textarea name="notes" rows="3" placeholder="Notas"></textarea>
-              <button class="btn primary" type="submit">Enviar por WhatsApp</button>
-            </form>
-          </div>
-        </section>
-
-        <section class="view" data-view="confirmacion">
-          <div class="panel center">
-            <h2>Pedido recibido</h2>
-            <p>Gracias por elegir Círculo de Sabores.</p>
-            <button class="btn primary" data-action="go-home">Volver a inicio</button>
-          </div>
-        </section>
-      </main>
-
-      <aside class="floating-cart" id="floatingCart" role="button" tabindex="0">
-        <span id="floatingQty">0 u</span>
-        <strong id="floatingTotal">$0</strong>
-      </aside>
-
-      <footer class="bottom-nav">
-        <button data-nav="home">Inicio</button>
-        <button data-nav="encargos">Encargos</button>
-        <button data-nav="carrito">Carrito</button>
-      </footer>
+  <!-- NAVBAR -->
+  <nav id="navbar" class="navbar" style="display:none">
+    <button class="nav-logo-btn" onclick="App.navigate('home')">
+      <img src="images/logo.png" alt="Círculo de Sabores" class="nav-logo"
+           onerror="this.style.display='none';document.getElementById('nav-brand').style.display='flex'" />
+      <span id="nav-brand" class="nav-brand" style="display:none">🌿 Círculo</span>
+    </button>
+    <div class="nav-actions">
+      <button class="nav-btn" onclick="App.navigate('encargos')" title="Encargos">
+        <i class="fa-solid fa-clipboard-list"></i>
+      </button>
+      <button class="nav-btn cart-btn" onclick="App.navigate('carrito')" title="Carrito">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span id="cart-badge" class="cart-badge hidden">0</span>
+      </button>
     </div>
+  </nav>
 
-    <script src="app.js"></script>
-  </body>
+  <!-- APP CONTAINER -->
+  <main id="app" class="app-container"></main>
+
+  <!-- FOOTER NAV -->
+  <footer id="footer-nav" class="footer-nav" style="display:none">
+    <button class="foot-btn" onclick="App.navigate('home')" data-view="home">
+      <i class="fa-solid fa-house"></i>
+      <span>Inicio</span>
+    </button>
+    <button class="foot-btn" onclick="App.navigate('encargos')" data-view="encargos">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+      <span>Encargos</span>
+    </button>
+    <button class="foot-btn cart-foot-btn" onclick="App.navigate('carrito')" data-view="carrito">
+      <i class="fa-solid fa-bag-shopping"></i>
+      <span>Carrito</span>
+      <span id="foot-cart-count" class="foot-cart-count hidden">0</span>
+    </button>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
 </html>
