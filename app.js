@@ -323,7 +323,7 @@ const Views = {
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-truck pill-icon" style="color:var(--accent)"></i>
-          <strong>Delivery desde 4 u.</strong>
+          <strong>Delivery desde 4 uni.</strong>
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-box-open pill-icon" style="color:var(--success)"></i>
