@@ -1199,7 +1199,6 @@ const App = {
     // Typewriter
     const subtitle = $('#intro-subtitle');
     const fullText = 'Barras y snacks artesanales hechos con amor.';
-    const fullText = 'Sin conservantes.';
     if (subtitle) {
       let i = 0;
       subtitle.classList.add('typewriter-cursor');
