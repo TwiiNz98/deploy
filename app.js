@@ -1198,7 +1198,7 @@ const App = {
   _initIntro() {
     // Typewriter
     const subtitle = $('#intro-subtitle');
-    const fullText = 'Barras y snacks artesanales hechos con amor. Sin conservantes, sin pretextos.';
+    const fullText = 'Barras y snacks artesanales hechos con amor.'<h>'Sin conservantes.';
     if (subtitle) {
       let i = 0;
       subtitle.classList.add('typewriter-cursor');
