@@ -319,7 +319,7 @@ const Views = {
       <div class="intro-pills">
         <span class="intro-pill">
           <i class="fa-solid fa-star pill-icon" style="color:var(--gold)"></i>
-          <strong>Sin mínimo en tienda</strong>
+          <strong>Alto en proteína</strong>
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-truck pill-icon" style="color:var(--accent)"></i>
