@@ -189,6 +189,19 @@ h1 {
   color: #fff;
 }
 
+.btn:disabled,
+.catalog-nav .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.product-hero {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
 .search-filters,
 .stack {
   display: grid;
