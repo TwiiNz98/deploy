@@ -327,7 +327,7 @@ const Views = {
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-box-open pill-icon" style="color:var(--success)"></i>
-          <strong>Packs con descuento</strong>
+          <strong>Descuento por volumen</strong>
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-wand-magic-sparkles pill-icon" style="color:var(--primary)"></i>
