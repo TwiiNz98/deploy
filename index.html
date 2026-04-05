@@ -4,14 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#F5E9DA" />
-  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento." />
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Círculo de Sabores" />
-  <link rel="apple-touch-icon" href="images/logo.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento." />
   <title>Círculo de Sabores</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -64,24 +61,18 @@
     </nav>
     <div class="ham-divider"></div>
     <div class="ham-social">
-      <div class="ham-social-item">
-        <a href="https://instagram.com/circulodesabores_cl" target="_blank" rel="noopener" class="ham-social-btn ham-ig">
-          <i class="fa-brands fa-instagram"></i>
-        </a>
-        <span class="ham-social-label">Instagram</span>
-      </div>
-      <div class="ham-social-item">
-        <a href="https://wa.me/56950147783" target="_blank" rel="noopener" class="ham-social-btn ham-wa">
-          <i class="fa-brands fa-whatsapp"></i>
-        </a>
-        <span class="ham-social-label">WhatsApp</span>
-      </div>
-      <div class="ham-social-item" id="ham-install-wrap">
-        <button class="ham-social-btn ham-dl" id="ham-install-btn" onclick="PWA.install()">
-          <i class="fa-solid fa-arrow-down-to-line"></i>
-        </button>
-        <span class="ham-social-label">Descargar</span>
-      </div>
+      <a href="https://instagram.com/circulodesabores_cl" target="_blank" rel="noopener" class="ham-social-btn ham-ig">
+        <i class="fa-brands fa-instagram"></i>
+      </a>
+      <a href="https://wa.me/56950147783" target="_blank" rel="noopener" class="ham-social-btn ham-wa">
+        <i class="fa-brands fa-whatsapp"></i>
+      </a>
+    </div>
+    <div class="ham-pwa-wrap" id="ham-pwa-wrap" style="display:none">
+      <button class="ham-pwa-btn" onclick="App.installPWA()">
+        <i class="fa-solid fa-download"></i>
+        <span>Instalar App</span>
+      </button>
     </div>
   </div>
 
@@ -118,9 +109,6 @@
       <button class="admin-tab active" onclick="Admin.showTab('productos', this)">
         <i class="fa-solid fa-box-open"></i> Productos
       </button>
-      <button class="admin-tab" onclick="Admin.showTab('imagenes', this)">
-        <i class="fa-solid fa-images"></i> Imágenes
-      </button>
       <button class="admin-tab" onclick="Admin.showTab('metodos', this)">
         <i class="fa-solid fa-truck"></i> Métodos
       </button>
@@ -132,15 +120,6 @@
       <!-- Populated by Admin.showTab() -->
     </div>
   </div>
-
-  <!-- Hidden file input for image uploads -->
-  <input type="file" id="file-upload-hero" accept="image/*" multiple style="display:none" onchange="Admin.onHeroImagesSelected(this)" />
-  <input type="file" id="file-upload-product" accept="image/*" multiple style="display:none" onchange="Admin.onProductImagesSelected(this)" />
-  <input type="file" id="file-upload-intro-bg" accept="image/*" style="display:none" onchange="Admin.onIntroBgSelected(this)" />
-
-  <!-- Firebase SDKs (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <script src="app.js"></script>
 </body>
