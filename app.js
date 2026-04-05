@@ -548,6 +548,9 @@ const Views = {
   intro() {
     return `
     <div class="view intro-view active" id="view-intro">
+      <video class="intro-video" autoplay muted loop playsinline>
+        <source src="videos/intro.mp4" type="video/mp4">
+      </video>
       <div class="intro-logo-wrap">
         <img src="images/logo.png" alt="Logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">

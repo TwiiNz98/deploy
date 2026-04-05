@@ -240,26 +240,32 @@ img { display: block; max-width: 100%; }
 .intro-view {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: 100%;
-  background: linear-gradient(160deg, #FFF8F2 0%, #F5E9DA 60%, #EDD9C8 100%);
+  height: 100%;
+  background: #FFF8F2;
   text-align: center; padding: 24px;
   position: relative; overflow: hidden;
 }
 .intro-view.active { display: flex; }
-.intro-view::before {
-  content: ''; position: absolute; top: -80px; right: -60px;
-  width: 220px; height: 220px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(196,119,65,.12) 0%, transparent 70%);
-  pointer-events: none;
+
+.intro-video {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: 0;
 }
-.intro-view::after {
-  content: ''; position: absolute; bottom: -60px; left: -40px;
-  width: 180px; height: 180px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(107,62,46,.10) 0%, transparent 70%);
+
+.intro-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(245, 233, 218, 0.35);
+  z-index: 1;
   pointer-events: none;
 }
 
 .intro-logo-wrap {
+  position: relative; z-index: 2;
   width: 110px; height: 110px;
   background: var(--surface); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -275,6 +281,7 @@ img { display: block; max-width: 100%; }
 }
 
 .intro-tag-anim {
+  position: relative; z-index: 2;
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--accent-l); color: var(--primary);
   font-size: .72rem; font-weight: 600; letter-spacing: .08em;
@@ -287,6 +294,7 @@ img { display: block; max-width: 100%; }
 #intro-tag-word { transition: opacity .3s ease; }
 
 .intro-title {
+  position: relative; z-index: 2;
   font-family: var(--font-display);
   font-size: 2.6rem; line-height: 1.15;
   color: var(--primary); margin-bottom: 12px;
@@ -307,7 +315,8 @@ img { display: block; max-width: 100%; }
   100% { opacity: 0; transform: translateY(60px) rotate(180deg) scale(0.2); }
 }
 .intro-subtitle {
-  font-size: .95rem; color: var(--text-2); line-height: 1.6;
+  position: relative; z-index: 2;
+  font-size: .95rem; color: var(--text); line-height: 1.6;
   max-width: 300px; margin: 0 auto 30px;
   animation: fadeIn .1s .6s both; min-height: 3.2em;
 }
@@ -318,6 +327,7 @@ img { display: block; max-width: 100%; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 .intro-pills {
+  position: relative; z-index: 2;
   display: flex; flex-wrap: wrap; gap: 10px;
   justify-content: center; margin-bottom: 36px;
   animation: fadeIn .4s .7s both;
@@ -344,6 +354,7 @@ img { display: block; max-width: 100%; }
 }
 
 .btn-ver-productos {
+  position: relative; z-index: 2;
   background: var(--primary); color: #fff;
   border-radius: var(--r-xl); padding: 16px 40px;
   font-size: 1rem; font-weight: 600; letter-spacing: .02em;
