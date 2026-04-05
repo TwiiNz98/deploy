@@ -1,8 +1,49 @@
 /* ============================================================
-   CÍRCULO DE SABORES — SPA Engine v2.0
-   Mobile-first | Conversion-optimized | Admin Panel
+   CÍRCULO DE SABORES — SPA Engine v2.1
+   Mobile-first | Conversion-optimized | Admin Panel + Firebase
    ============================================================ */
 'use strict';
+
+/* ── FIREBASE SERVICE ────────────────────────────────────── */
+const FirebaseService = {
+  db: null,
+  COLLECTION: 'cds_admin',
+  DOC_ID:     'config_v2',
+
+  init() {
+    try {
+      if (typeof firebase === 'undefined') return;
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          apiKey:            'AIzaSyCEAUseZgGWQ3BDvtPOIrXlQ1RYrsbtj-4',
+          authDomain:        'cdss-98b00.firebaseapp.com',
+          projectId:         'cdss-98b00',
+          storageBucket:     'cdss-98b00.firebasestorage.app',
+          messagingSenderId: '298779719253',
+          appId:             '1:298779719253:web:29468b7c0ca5f4f26c06dc',
+        });
+      }
+      this.db = firebase.firestore();
+    } catch(e) { console.warn('[Firebase] Init failed:', e); }
+  },
+
+  async load() {
+    if (!this.db) return null;
+    try {
+      const doc = await this.db.collection(this.COLLECTION).doc(this.DOC_ID).get();
+      return doc.exists ? doc.data() : null;
+    } catch(e) { console.warn('[Firebase] Load failed:', e); return null; }
+  },
+
+  // Images (base64) are NOT stored in Firestore — too large. They live in localStorage.
+  save(data) {
+    if (!this.db) return;
+    const { heroImages, productImages, introBackground, ...config } = data;
+    this.db.collection(this.COLLECTION).doc(this.DOC_ID)
+      .set(config, { merge: true })
+      .catch(e => console.warn('[Firebase] Save failed:', e));
+  },
+};
 
 /* ── BASE PRODUCTS ──────────────────────────────────────── */
 const BASE_PRODUCTS = [
@@ -88,8 +129,9 @@ const WHATSAPP_NUMBER = '56950147783';
 const AdminState = {
   _d: {
     products: null,           // null = use BASE_PRODUCTS
-    heroImages: [],           // base64 strings
-    productImages: {},        // { productId: [base64, ...] }
+    heroImages: [],           // base64 strings (localStorage only)
+    productImages: {},        // { productId: [base64, ...] } (localStorage only)
+    introBackground: null,    // base64 string for intro view bg (localStorage only)
     deliveryMethods: { retiro: false, delivery: true },
     paymentMethods: { transferencia: true, efectivo: false, tarjeta: false },
     content: {
@@ -100,29 +142,48 @@ const AdminState = {
   },
 
   load() {
+    // 1. Immediate — load everything from localStorage
     try {
       const s = localStorage.getItem('cds_admin_v2');
-      if (s) {
-        const p = JSON.parse(s);
-        // Deep merge
-        if (p.products)       this._d.products = p.products;
-        if (p.heroImages)     this._d.heroImages = p.heroImages;
-        if (p.productImages)  this._d.productImages = p.productImages;
-        if (p.deliveryMethods) Object.assign(this._d.deliveryMethods, p.deliveryMethods);
-        if (p.paymentMethods) Object.assign(this._d.paymentMethods, p.paymentMethods);
-        if (p.content)        Object.assign(this._d.content, p.content);
-      }
+      if (s) this._merge(JSON.parse(s));
     } catch(e) {}
+
+    // 2. Async — load config (non-images) from Firestore and merge
+    FirebaseService.init();
+    FirebaseService.load().then(data => {
+      if (!data) return;
+      this._merge(data);
+      this._saveLocal(); // keep localStorage in sync
+      // Refresh view if already on home
+      if (typeof State !== 'undefined' && State.currentView === 'home') {
+        App.navigate('home');
+      }
+    });
+  },
+
+  _merge(p) {
+    if (p.products)              this._d.products = p.products;
+    if (p.heroImages)            this._d.heroImages = p.heroImages;
+    if (p.productImages)         this._d.productImages = p.productImages;
+    if (p.introBackground !== undefined) this._d.introBackground = p.introBackground;
+    if (p.deliveryMethods)       Object.assign(this._d.deliveryMethods, p.deliveryMethods);
+    if (p.paymentMethods)        Object.assign(this._d.paymentMethods, p.paymentMethods);
+    if (p.content)               Object.assign(this._d.content, p.content);
+  },
+
+  _saveLocal() {
+    try { localStorage.setItem('cds_admin_v2', JSON.stringify(this._d)); } catch(e) {
+      showToast('⚠️ No se pudo guardar localmente (espacio lleno)', '⚠️');
+    }
   },
 
   save() {
-    try {
-      localStorage.setItem('cds_admin_v2', JSON.stringify(this._d));
-    } catch(e) { showToast('⚠️ No se pudo guardar (espacio lleno)', '⚠️'); }
+    this._saveLocal();
+    FirebaseService.save(this._d); // async, non-blocking
   },
 
-  get(k)     { return this._d[k]; },
-  set(k, v)  { this._d[k] = v; this.save(); },
+  get(k)    { return this._d[k]; },
+  set(k, v) { this._d[k] = v; this.save(); },
 };
 
 function getProducts() {
@@ -300,8 +361,11 @@ const Views = {
 
   /* ── INTRO ─────────────────────────────── */
   intro() {
+    const introBg = AdminState.get('introBackground');
+    const hasBg   = introBg ? ' has-bg' : '';
+    const bgProp  = introBg ? `style="--intro-bg:url('${introBg.replace(/'/g, "\\'")}')"` : '';
     return `
-    <div class="view intro-view active" id="view-intro">
+    <div class="view intro-view${hasBg} active" id="view-intro" ${bgProp}>
       <div class="intro-logo-wrap">
         <img src="images/logo.png" alt="Logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -432,7 +496,7 @@ const Views = {
       </div>
 
       <!-- FILTROS -->
-      <div class="filters-wrap">${categoryBtns}</div>
+      <div class="filters-wrap" id="category-filters">${categoryBtns}</div>
 
       <!-- DELIVERY INDICATOR -->
       <div class="delivery-banner ${unlocked ? 'unlocked' : ''}">
@@ -449,10 +513,10 @@ const Views = {
 
       <!-- GRID -->
       <div class="section-label">Catálogo</div>
-      <div class="products-grid">${cards}</div>
+      <div class="products-grid" id="products-grid">${cards}</div>
 
       <!-- PACKS DESTACADOS -->
-      ${packSection}
+      <div id="packs-wrap">${packSection}</div>
     </div>`;
   },
 
@@ -1004,9 +1068,32 @@ const Admin = {
     input.value = '';
   },
 
+  onIntroBgSelected(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+      AdminState.set('introBackground', e.target.result);
+      const body = $('#admin-body');
+      if (body) body.innerHTML = Admin.renderImagenes();
+      showToast('Imagen de inicio guardada', '🖼️');
+    };
+    r.readAsDataURL(file);
+    input.value = '';
+  },
+
+  removeIntroBg() {
+    AdminState.set('introBackground', null);
+    const body = $('#admin-body');
+    if (body) body.innerHTML = Admin.renderImagenes();
+    showToast('Imagen eliminada', '🗑️');
+  },
+
   /* -- Tab: IMÁGENES -- */
   renderImagenes() {
-    const imgs = AdminState.get('heroImages') || [];
+    const imgs    = AdminState.get('heroImages') || [];
+    const introBg = AdminState.get('introBackground');
+
     const thumbs = imgs.map((src, i) => `
       <div class="admin-img-thumb">
         <img src="${src}" />
@@ -1014,10 +1101,31 @@ const Admin = {
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>`).join('');
+
+    const introBgHtml = introBg ? `
+      <div class="admin-img-thumb" style="aspect-ratio:3/2">
+        <img src="${introBg}" style="object-position:center top" />
+        <button class="admin-img-remove" onclick="Admin.removeIntroBg()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>` : '';
+
     return `
-      <div class="admin-section-title">Diapositivas del Hero</div>
+      <div class="admin-section-title">🖼️ Pantalla de Inicio (Fondo)</div>
+      <p style="font-size:.82rem;color:var(--text-3);margin-bottom:10px">
+        Esta imagen aparece de fondo en la pantalla de bienvenida. Se recomienda foto vertical u horizontal con espacio para el texto.
+      </p>
+      <div class="admin-img-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:4px">
+        ${introBgHtml}
+        <div class="admin-add-img-btn" style="aspect-ratio:3/2" onclick="document.getElementById('file-upload-intro-bg').click()">
+          <i class="fa-solid fa-image"></i><span>${introBg ? 'Cambiar imagen' : 'Agregar imagen'}</span>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+
+      <div class="admin-section-title">📸 Diapositivas del Hero (pantalla de productos)</div>
       <p style="font-size:.82rem;color:var(--text-3);margin-bottom:12px">
-        Estas imágenes se muestran como fondo en la pantalla principal. Se cambian automáticamente.
+        Estas imágenes se muestran como fondo rotativo en la pantalla principal.
       </p>
       <div class="admin-img-grid" id="hero-img-grid">
         ${thumbs}
@@ -1026,7 +1134,9 @@ const Admin = {
         </div>
       </div>
       <p style="font-size:.75rem;color:var(--text-3);margin-top:8px">
-        Máx. 10 imágenes. Se recomiendan fotos horizontales.
+        Máx. 10 imágenes. Se recomiendan fotos horizontales.<br>
+        <i class="fa-solid fa-circle-info" style="color:var(--accent)"></i>
+        Las imágenes se guardan en este dispositivo. Los textos y configuraciones se sincronizan en la nube ☁️.
       </p>`;
   },
 
@@ -1266,24 +1376,33 @@ const App = {
 
   /* ── INTRO BUTTON ANIMATION ─────────────── */
   animateIntroBtn() {
+    const logo      = document.querySelector('.intro-logo-wrap');
+    const introView = document.querySelector('.intro-view');
+    if (!logo || !introView) { App.navigate('home'); return; }
+
+    // Prevent double-click
     const btn = $('#btn-ver-productos');
-    const text = $('#btn-ver-text');
-    if (!btn) { App.navigate('home'); return; }
-    if (text) {
-      text.style.transition = 'opacity .3s ease, max-width .4s ease';
-      text.style.opacity = '0';
-      text.style.maxWidth = '0';
-      text.style.overflow = 'hidden';
-    }
-    btn.style.transition = 'all .55s cubic-bezier(.4,0,.2,1)';
-    btn.style.minWidth = '0';
-    btn.style.width = '56px';
-    btn.style.height = '56px';
-    btn.style.padding = '0';
-    btn.style.borderRadius = '50%';
-    btn.style.justifyContent = 'center';
-    btn.style.gap = '0';
-    setTimeout(() => App.navigate('home'), 650);
+    if (btn) btn.style.pointerEvents = 'none';
+
+    // 1. Fade out all content except logo (fast)
+    ['.intro-tag-anim', '.intro-title', '#intro-subtitle', '.intro-pills', '.btn-ver-productos'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) { el.style.transition = 'opacity 0.22s ease'; el.style.opacity = '0'; }
+    });
+
+    // 2. Zoom the logo toward the viewer — Super Zoom-In
+    setTimeout(() => {
+      logo.style.transition = 'transform 0.7s cubic-bezier(0.2,0,0.3,1), opacity 0.18s ease 0.54s, box-shadow 0.4s ease';
+      logo.style.transformOrigin = 'center center';
+      logo.style.transform = 'scale(30)';
+      logo.style.boxShadow = 'none';
+    }, 180);
+
+    // 3. Fade logo at peak (just before navigate)
+    setTimeout(() => { logo.style.opacity = '0'; }, 580);
+
+    // 4. Navigate
+    setTimeout(() => App.navigate('home'), 820);
   },
 
   /* ── HAMBURGER MENU ─────────────────────── */
@@ -1360,27 +1479,71 @@ const App = {
   },
 
   /* ── SEARCH & FILTER ─────────────────────── */
+  _searchTimer: null,
+
   onSearch(val) {
     State.searchQuery = val;
     const clearBtn = $('#search-clear');
     if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
-    App._refreshHome();
+    // Debounce — no full page re-render, only update grid
+    clearTimeout(App._searchTimer);
+    App._searchTimer = setTimeout(() => App._updateProductGrid(), 160);
   },
 
   clearSearch() {
     State.searchQuery = '';
-    App.navigate('home');
+    const inp = $('#search-input');
+    if (inp) inp.value = '';
+    const clearBtn = $('#search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    App._updateProductGrid();
   },
 
   setCategory(cat) {
     State.activeCategory = cat;
-    App.navigate('home');
+    App._updateProductGrid();
   },
 
-  _refreshHome() {
-    App.navigate('home');
-    const inp = $('#search-input');
-    if (inp) { inp.value = State.searchQuery; inp.focus(); inp.setSelectionRange(9999, 9999); }
+  // Surgical DOM update: only rebuilds the filter buttons + product grid
+  _updateProductGrid() {
+    const grid       = $('#products-grid');
+    const catFilters = $('#category-filters');
+    const packsWrap  = $('#packs-wrap');
+
+    // If we're not on the home view yet, do a full navigate
+    if (!grid) { App.navigate('home'); return; }
+
+    const products = getProducts();
+    const filtered = products.filter(p => {
+      const matchCat    = State.activeCategory === 'todos' || p.category === State.activeCategory;
+      const matchSearch = !State.searchQuery ||
+        p.name.toLowerCase().includes(State.searchQuery.toLowerCase()) ||
+        p.desc.toLowerCase().includes(State.searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+
+    // Update category buttons (active state only)
+    if (catFilters) {
+      catFilters.innerHTML = CATEGORIES.map(c =>
+        `<button class="filter-btn ${State.activeCategory === c ? 'active' : ''}"
+                 onclick="App.setCategory('${c}')">
+          ${c === 'todos' ? 'Todos' : c.charAt(0).toUpperCase() + c.slice(1)}
+         </button>`
+      ).join('');
+    }
+
+    // Update product cards
+    const cards = filtered.length > 0
+      ? filtered.map(p => Views._productCard(p)).join('')
+      : `<div class="no-results">
+           <i class="fa-solid fa-magnifying-glass"></i>
+           <p>Sin resultados para "<strong>${State.searchQuery}</strong>"</p>
+           <button class="btn-ghost" onclick="App.clearSearch()">Limpiar búsqueda</button>
+         </div>`;
+    grid.innerHTML = cards;
+
+    // Show/hide packs section based on category
+    if (packsWrap) packsWrap.style.display = State.activeCategory !== 'todos' ? 'none' : '';
   },
 
   /* ── CART ACTIONS ────────────────────────── */
@@ -1523,12 +1686,125 @@ const App = {
   /* ── INIT ────────────────────────────────── */
   init() {
     AdminState.load();
+    PWA.init();
     // Ensure default checkout method respects admin settings
     const dm = AdminState.get('deliveryMethods');
     if (!dm.delivery && dm.retiro) State.checkoutMethod = 'retiro';
     else if (dm.delivery) State.checkoutMethod = 'delivery';
     App.navigate('intro');
     Cart.refreshBadge();
+  },
+};
+
+/* ── PWA INSTALL ─────────────────────────────────────────── */
+const PWA = {
+  _prompt:      null,   // deferred beforeinstallprompt event
+  _isIOS:       /iphone|ipad|ipod/i.test(navigator.userAgent),
+  _isInstalled: window.matchMedia('(display-mode: standalone)').matches
+                || ('standalone' in navigator && navigator.standalone === true),
+
+  init() {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(e => console.warn('[SW] Registration failed:', e));
+    }
+
+    // Android/Chrome: capture the install prompt
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      this._prompt = e;
+      // Make the button pulse once to attract attention
+      const btn = document.getElementById('ham-install-btn');
+      if (btn) { btn.classList.add('pwa-pulse'); setTimeout(() => btn.classList.remove('pwa-pulse'), 1800); }
+    });
+
+    // When successfully installed, celebrate
+    window.addEventListener('appinstalled', () => {
+      this._prompt = null;
+      showToast('¡App instalada correctamente! 🎉', '📲');
+    });
+  },
+
+  install() {
+    App.closeMenu();
+
+    if (this._isInstalled) {
+      showToast('La app ya está instalada en tu inicio 👌', '📱');
+      return;
+    }
+
+    // Android/Chrome: native prompt available
+    if (this._prompt) {
+      this._prompt.prompt();
+      this._prompt.userChoice.then(r => {
+        if (r.outcome === 'accepted') showToast('Instalando… 🎉', '📲');
+        this._prompt = null;
+      });
+      return;
+    }
+
+    // iOS / Safari: show step-by-step guide
+    if (this._isIOS) {
+      this._showIOSModal();
+      return;
+    }
+
+    // Other browsers: generic fallback
+    this._showGenericModal();
+  },
+
+  _showIOSModal() {
+    this._openModal(`
+      <div class="pwa-modal-icon">📱</div>
+      <h3 class="pwa-modal-title">Instalar en iPhone</h3>
+      <p class="pwa-modal-sub">Sigue estos pasos en Safari:</p>
+      <ol class="pwa-modal-steps">
+        <li>
+          <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          <span>Toca el botón <strong>Compartir</strong> en la barra inferior de Safari</span>
+        </li>
+        <li>
+          <i class="fa-solid fa-plus"></i>
+          <span>Selecciona <strong>"Agregar a pantalla de inicio"</strong></span>
+        </li>
+        <li>
+          <i class="fa-solid fa-check"></i>
+          <span>Toca <strong>Agregar</strong> — ¡y listo!</span>
+        </li>
+      </ol>
+    `);
+  },
+
+  _showGenericModal() {
+    this._openModal(`
+      <div class="pwa-modal-icon">⬇️</div>
+      <h3 class="pwa-modal-title">Instalar la app</h3>
+      <p class="pwa-modal-sub">Para agregar a tu pantalla de inicio:</p>
+      <div class="pwa-modal-android">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>En Chrome, toca el menú (⋮) y selecciona <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla de inicio"</strong>.</span>
+      </div>
+      <div class="pwa-modal-android" style="margin-top:8px">
+        <i class="fa-solid fa-rotate-right"></i>
+        <span>Si la opción no aparece, recarga la página y vuelve a intentarlo.</span>
+      </div>
+    `);
+  },
+
+  _openModal(content) {
+    $$('.pwa-modal').forEach(m => m.remove()); // remove any existing
+    const modal = document.createElement('div');
+    modal.className = 'pwa-modal';
+    modal.innerHTML = `
+      <div class="pwa-modal-inner">
+        <button class="pwa-modal-close" onclick="this.closest('.pwa-modal').remove()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        ${content}
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
   },
 };
 

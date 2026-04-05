@@ -1,0 +1,28 @@
+{
+  "name": "Círculo de Sabores",
+  "short_name": "Círculo de Sabores",
+  "description": "Barras y snacks artesanales saludables. Compra por unidad o en packs.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFF8F2",
+  "theme_color": "#6B3E2E",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["food", "shopping"]
+}

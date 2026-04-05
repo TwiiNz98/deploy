@@ -165,8 +165,15 @@ img { display: block; max-width: 100%; }
 .ham-divider { height: 1px; background: var(--border); margin: 0 16px; }
 
 .ham-social {
-  display: flex; justify-content: center; gap: 20px;
-  padding: 24px 16px;
+  display: flex; justify-content: center; gap: 18px;
+  padding: 20px 16px 24px;
+}
+.ham-social-item {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.ham-social-label {
+  font-size: .62rem; font-weight: 700; color: var(--text-3);
+  letter-spacing: .06em; text-transform: uppercase;
 }
 .ham-social-btn {
   width: 52px; height: 52px;
@@ -180,6 +187,70 @@ img { display: block; max-width: 100%; }
 .ham-social-btn:active { transform: scale(.93); }
 .ham-ig { background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
 .ham-wa { background: #25D366; }
+.ham-dl { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); }
+
+/* Pulse when Android install prompt is ready */
+@keyframes pwaPulse {
+  0%, 100% { box-shadow: var(--shadow-m); transform: scale(1); }
+  40%  { box-shadow: 0 0 0 8px rgba(107,62,46,.18), var(--shadow-m); transform: scale(1.08); }
+  70%  { box-shadow: 0 0 0 14px rgba(107,62,46,.08); transform: scale(1.04); }
+}
+.pwa-pulse { animation: pwaPulse 1.8s ease forwards; }
+
+/* ── PWA INSTALL MODAL (iOS guide) ──────────────────────── */
+.pwa-modal {
+  position: fixed; inset: 0; z-index: 600;
+  background: rgba(44, 26, 14, .52);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: fadeIn .22s ease;
+}
+.pwa-modal-inner {
+  background: var(--surface);
+  border-radius: var(--r-l) var(--r-l) 0 0;
+  padding: 24px 24px 40px;
+  width: 100%; max-width: 480px;
+  position: relative;
+  animation: slideUp .28s cubic-bezier(.32,1.2,.64,1);
+}
+.pwa-modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg); color: var(--text-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem;
+}
+.pwa-modal-icon { font-size: 2.8rem; text-align: center; margin-bottom: 10px; }
+.pwa-modal-title {
+  font-family: var(--font-display); font-size: 1.4rem;
+  color: var(--primary); text-align: center; margin-bottom: 6px;
+}
+.pwa-modal-sub {
+  font-size: .85rem; color: var(--text-2);
+  text-align: center; margin-bottom: 18px;
+}
+.pwa-modal-steps {
+  list-style: none; display: flex; flex-direction: column; gap: 12px;
+  background: var(--bg); border-radius: var(--r-m); padding: 16px 18px;
+}
+.pwa-modal-steps li {
+  display: flex; align-items: center; gap: 12px;
+  font-size: .9rem; color: var(--text);
+}
+.pwa-modal-steps li i {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; flex-shrink: 0;
+}
+.pwa-modal-android {
+  margin-top: 14px; padding: 12px 16px;
+  background: var(--bg); border-radius: var(--r-m);
+  font-size: .82rem; color: var(--text-2);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.pwa-modal-android i { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
 
 /* ── LAYOUT ──────────────────────────────────────────────── */
 .app-container {
@@ -246,7 +317,43 @@ img { display: block; max-width: 100%; }
 }
 .intro-view.active { display: flex; }
 
-/* Decorative bg circles */
+/* ── INTRO BACKGROUND IMAGE ──────────────────────────────── */
+/* When admin uploads a background image for the intro screen */
+.intro-view.has-bg {
+  background: transparent !important;
+}
+/* Override decorative circles → full-cover photo */
+.intro-view.has-bg::before {
+  top: 0; right: 0; bottom: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 0;
+  background: var(--intro-bg) center / cover no-repeat;
+  z-index: 0;
+}
+/* Semi-transparent overlay so text stays legible */
+.intro-view.has-bg::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 0;
+  background: rgba(245, 233, 218, 0.60);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 1;
+}
+/* All direct children sit above overlay */
+.intro-view.has-bg > * {
+  position: relative;
+  z-index: 2;
+}
+/* Logo gets a cleaner card-look on busy backgrounds */
+.intro-view.has-bg .intro-logo-wrap {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.22), 0 0 0 4px rgba(196, 119, 65, 0.18);
+}
+
+/* Decorative bg circles (visible when no background image) */
 .intro-view::before {
   content: '';
   position: absolute; top: -80px; right: -60px;
