@@ -3,58 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-
-  <!-- PWA / theme -->
-  <meta name="theme-color" content="#6B3E2E" />
-  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#F5E9DA" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Círculo de Sabores" />
-  <meta name="application-name" content="Círculo de Sabores" />
-
-  <!-- SEO / sharing -->
-  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento. Delivery disponible." />
-  <meta property="og:title" content="Círculo de Sabores" />
-  <meta property="og:description" content="Barras y snacks artesanales. Pedidos personalizados con delivery." />
-  <meta property="og:type" content="website" />
-
   <link rel="manifest" href="manifest.json" />
-
-  <!-- Fonts -->
+  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento." />
+  <title>Círculo de Sabores</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
   <link rel="stylesheet" href="styles.css" />
-
-  <title>Círculo de Sabores</title>
-
-  <!-- ─────────────────────────────────────────────────────────
-       GLOBAL CONFIG
-       app.js reads window.CDS_CONFIG for all business rules.
-       Firebase Admin can override these values at runtime.
-       ───────────────────────────────────────────────────────── -->
-  <script>
-    window.CDS_CONFIG = {
-      delivery: {
-        /* Delivery is ALWAYS available — no unit restriction */
-        alwaysEnabled : true,
-        minUnits      : 0,
-        /* Free shipping threshold (CLP) */
-        freeThreshold : 20000,
-        /* Normal shipping cost when below threshold (CLP).
-           Override this value from Firebase Admin > Métodos. */
-        baseCost      : 2990
-      },
-      pwa: {
-        /* Set to false to suppress the install banner */
-        showBanner   : true,
-        /* Days to wait before re-prompting after dismiss */
-        dismissDays  : 7
-      }
-    };
-  </script>
 </head>
 <body>
 
@@ -108,7 +68,6 @@
         <i class="fa-brands fa-whatsapp"></i>
       </a>
     </div>
-    <!-- PWA install — shown by App.checkInstallPrompt() -->
     <div class="ham-pwa-wrap" id="ham-pwa-wrap" style="display:none">
       <button class="ham-pwa-btn" onclick="App.installPWA()">
         <i class="fa-solid fa-download"></i>
@@ -117,7 +76,7 @@
     </div>
   </div>
 
-  <!-- APP CONTAINER (SPA shell) -->
+  <!-- APP CONTAINER -->
   <main id="app" class="app-container"></main>
 
   <!-- FOOTER NAV -->
@@ -137,270 +96,31 @@
     </button>
   </footer>
 
-  <!-- PWA INSTALL BANNER (Chrome/Android) — shown by App.showInstallBanner() -->
-  <div id="pwa-install-banner" class="pwa-install-banner" style="display:none" role="complementary" aria-label="Instalar aplicación">
-    <div class="pwa-banner-inner">
-      <div class="pwa-banner-icon">🌿</div>
-      <div class="pwa-banner-text">
-        <strong>Instala la app</strong>
-        <span>Acceso rápido, sin abrir el navegador</span>
-      </div>
-      <button class="pwa-banner-btn" onclick="App.installPWA()">Instalar</button>
-      <button class="pwa-banner-dismiss" onclick="App.dismissInstallBanner()" aria-label="Cerrar">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- iOS INSTALL TIP — shown on Safari iOS when not in standalone -->
-  <div id="pwa-ios-tip" class="pwa-ios-tip" style="display:none" role="dialog" aria-label="Cómo instalar en iPhone">
-    <button class="pwa-ios-tip-close" onclick="App.dismissIosTip()" aria-label="Cerrar">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-    <div class="pwa-ios-tip-title">
-      <i class="fa-solid fa-mobile-screen" style="color:var(--primary)"></i>
-      Instala Círculo de Sabores
-    </div>
-    <div class="pwa-ios-tip-steps">
-      <div class="pwa-ios-step">
-        <span class="pwa-ios-step-num">1</span>
-        <span>Toca el botón <strong>Compartir</strong> <i class="fa-solid fa-arrow-up-from-bracket" style="color:var(--accent)"></i> en Safari</span>
-      </div>
-      <div class="pwa-ios-step">
-        <span class="pwa-ios-step-num">2</span>
-        <span>Selecciona <strong>"Agregar a pantalla de inicio"</strong></span>
-      </div>
-      <div class="pwa-ios-step">
-        <span class="pwa-ios-step-num">3</span>
-        <span>Toca <strong>Agregar</strong> — ¡listo!</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ─────────────────────────────────────────────────────────
-       ADMIN PANEL
-       · Only fields synced to Firebase are rendered.
-       · Admin.showTab() populates #admin-body dynamically.
-       · Tabs: Productos | Métodos | Contenido | Delivery
-       ───────────────────────────────────────────────────────── -->
-  <div class="admin-panel" id="admin-panel" style="display:none" role="dialog" aria-modal="true" aria-label="Panel de administración">
+  <!-- ADMIN PANEL OVERLAY -->
+  <div class="admin-panel" id="admin-panel" style="display:none">
     <div class="admin-header">
       <button class="admin-back-btn" onclick="Admin.close()">
         <i class="fa-solid fa-chevron-left"></i> Salir
       </button>
-      <h2 class="admin-title">Panel Admin</h2>
-      <div class="admin-firebase-badge">
-        <i class="fa-solid fa-fire"></i> Firebase
-      </div>
+      <h2 class="admin-title">⚙️ Panel Admin</h2>
+      <div></div>
     </div>
-
-    <div class="admin-tabs-bar" id="admin-tabs-bar" role="tablist">
-      <button class="admin-tab active" role="tab" aria-selected="true"
-              onclick="Admin.showTab('productos', this)">
+    <div class="admin-tabs-bar" id="admin-tabs-bar">
+      <button class="admin-tab active" onclick="Admin.showTab('productos', this)">
         <i class="fa-solid fa-box-open"></i> Productos
       </button>
-      <button class="admin-tab" role="tab" aria-selected="false"
-              onclick="Admin.showTab('metodos', this)">
-        <i class="fa-solid fa-truck"></i> Métodos
+      <button class="admin-tab" onclick="Admin.showTab('entrega', this)">
+        <i class="fa-solid fa-truck"></i> Entrega
       </button>
-      <button class="admin-tab" role="tab" aria-selected="false"
-              onclick="Admin.showTab('contenido', this)">
+      <button class="admin-tab" onclick="Admin.showTab('contenido', this)">
         <i class="fa-solid fa-pen-to-square"></i> Contenido
       </button>
-      <button class="admin-tab" role="tab" aria-selected="false"
-              onclick="Admin.showTab('delivery', this)">
-        <i class="fa-solid fa-circle-dollar-to-slot"></i> Delivery
-      </button>
     </div>
-
-    <!-- Body populated by Admin.showTab() -->
-    <div class="admin-body" id="admin-body" role="tabpanel">
-      <!-- JS renders content here -->
+    <div class="admin-body" id="admin-body">
+      <!-- Populated by Admin.showTab() -->
     </div>
   </div>
 
-  <!-- ─────────────────────────────────────────────────────────
-       SERVICE WORKER REGISTRATION
-       ───────────────────────────────────────────────────────── -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(reg => {
-            /* Notify app of available SW update */
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (!newWorker) return;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  /* A new SW is ready; app.js can prompt the user to refresh */
-                  window.dispatchEvent(new CustomEvent('sw-update-ready', { detail: reg }));
-                }
-              });
-            });
-          })
-          .catch(err => console.warn('[SW] registration failed:', err));
-      });
-    }
-  </script>
-
-  <!-- ─────────────────────────────────────────────────────────
-       HERO VIDEO CONTROLLER
-       · Sets playbackRate = 0.5
-       · On 'ended': applies blur-out, rewinds, plays, removes blur
-       · Uses MutationObserver to handle dynamically injected <video>
-       ───────────────────────────────────────────────────────── -->
-  <script>
-    (function () {
-      'use strict';
-
-      function configureHeroVideo(video) {
-        if (video._cdsConfigured) return;
-        video._cdsConfigured = true;
-
-        /* Half-speed playback */
-        video.playbackRate = 0.5;
-
-        /* Ensure loopless (we handle the restart manually for the blur effect) */
-        video.removeAttribute('loop');
-
-        video.addEventListener('ended', function onEnded() {
-          /* ① Blur out */
-          video.classList.remove('hero-video-fade-in');
-          video.classList.add('hero-video-fade-out');
-
-          /* ② After blur transition completes: rewind & replay */
-          setTimeout(function () {
-            video.currentTime = 0;
-            var playPromise = video.play();
-
-            function afterPlay() {
-              /* Restore playback speed (some browsers reset it) */
-              video.playbackRate = 0.5;
-              /* ③ Blur in (clear) on next frame so transition fires */
-              requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                  video.classList.remove('hero-video-fade-out');
-                  video.classList.add('hero-video-fade-in');
-                });
-              });
-            }
-
-            if (playPromise !== undefined) {
-              playPromise.then(afterPlay).catch(afterPlay);
-            } else {
-              afterPlay();
-            }
-          }, 950); /* matches CSS transition: filter .9s ease */
-        });
-      }
-
-      /* Watch for dynamically injected video elements (app.js renders the hero) */
-      var _obs = new MutationObserver(function (mutations) {
-        mutations.forEach(function (m) {
-          m.addedNodes.forEach(function (node) {
-            if (node.nodeType !== 1) return;
-            if (node.matches && node.matches('.hero-video-bg')) {
-              configureHeroVideo(node);
-            }
-            if (node.querySelectorAll) {
-              node.querySelectorAll('.hero-video-bg').forEach(configureHeroVideo);
-            }
-          });
-        });
-      });
-
-      document.addEventListener('DOMContentLoaded', function () {
-        var app = document.getElementById('app');
-        if (app) _obs.observe(app, { childList: true, subtree: true });
-        /* In case video is already in DOM at parse time */
-        document.querySelectorAll('.hero-video-bg').forEach(configureHeroVideo);
-      });
-    })();
-  </script>
-
-  <!-- ─────────────────────────────────────────────────────────
-       PWA INSTALL PROMPT CONTROLLER
-       Handles Chrome beforeinstallprompt and iOS tip sheet.
-       app.js exposes App.installPWA() / App.showInstallBanner() /
-       App.dismissInstallBanner() / App.dismissIosTip().
-       ───────────────────────────────────────────────────────── -->
-  <script>
-    (function () {
-      'use strict';
-
-      var _deferredPrompt = null;
-      var DISMISS_KEY     = 'cds_pwa_dismiss';
-
-      /* Store the install prompt for later use */
-      window.addEventListener('beforeinstallprompt', function (e) {
-        e.preventDefault();
-        _deferredPrompt = e;
-        window._cdsPWAPrompt = e;
-
-        /* Show banner if not recently dismissed */
-        var dismissed = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10);
-        var days      = (window.CDS_CONFIG?.pwa?.dismissDays || 7) * 86400000;
-        if (Date.now() - dismissed > days && window.CDS_CONFIG?.pwa?.showBanner !== false) {
-          var banner = document.getElementById('pwa-install-banner');
-          if (banner) banner.style.display = 'block';
-          /* Also tell app.js so the hamburger button can appear */
-          var wrap = document.getElementById('ham-pwa-wrap');
-          if (wrap) wrap.style.display = 'flex';
-        }
-      });
-
-      /* After installation */
-      window.addEventListener('appinstalled', function () {
-        _deferredPrompt = null;
-        window._cdsPWAPrompt = null;
-        var banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
-        var wrap = document.getElementById('ham-pwa-wrap');
-        if (wrap) wrap.style.display = 'none';
-      });
-
-      /* iOS Safari: show tip sheet if in browser (not standalone) */
-      function isIos()        { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
-      function isStandalone() { return window.navigator.standalone === true; }
-
-      if (isIos() && !isStandalone()) {
-        var dismissed = parseInt(localStorage.getItem(DISMISS_KEY + '_ios') || '0', 10);
-        var days      = (window.CDS_CONFIG?.pwa?.dismissDays || 7) * 86400000;
-        if (Date.now() - dismissed > days) {
-          /* Small delay — don't interrupt the intro animation */
-          setTimeout(function () {
-            var tip = document.getElementById('pwa-ios-tip');
-            if (tip) tip.style.display = 'block';
-          }, 4000);
-        }
-      }
-
-      /* Global helpers called by buttons and app.js */
-      window._cdsInstallPWA = function () {
-        if (!_deferredPrompt) return;
-        _deferredPrompt.prompt();
-        _deferredPrompt.userChoice.then(function () {
-          _deferredPrompt = null;
-          window._cdsPWAPrompt = null;
-        });
-      };
-
-      window._cdsDismissInstallBanner = function () {
-        localStorage.setItem(DISMISS_KEY, Date.now().toString());
-        var banner = document.getElementById('pwa-install-banner');
-        if (banner) banner.style.display = 'none';
-      };
-
-      window._cdsDismissIosTip = function () {
-        localStorage.setItem(DISMISS_KEY + '_ios', Date.now().toString());
-        var tip = document.getElementById('pwa-ios-tip');
-        if (tip) tip.style.display = 'none';
-      };
-    })();
-  </script>
-
-  <!-- Main SPA logic -->
   <script src="app.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
 'use strict';
 
 /* ── DELIVERY THRESHOLD ─────────────────────────────────── */
-const DELIVERY_MIN = 8;
+const DELIVERY_FREE_THRESHOLD = 20000; // Delivery gratis sobre $20.000
 
 /* ── TAG DEFINITIONS ────────────────────────────────────── */
 const TAGS = {
@@ -333,6 +333,13 @@ const BASE_PRODUCTS = [
 
 const WHATSAPP_NUMBER = '56950147783';
 
+/* ── HERO IMAGES (filesystem-based) ─────────────────────── */
+const HERO_IMAGES = [
+  'images/hero/1.jpg',
+  'images/hero/2.jpg',
+  'images/hero/3.jpg',
+];
+
 /* ── ADMIN STATE ────────────────────────────────────────── */
 const AdminState = {
   _d: {
@@ -341,7 +348,7 @@ const AdminState = {
     paymentMethods: { transferencia: true, efectivo: false, tarjeta: false },
     content: {
       heroTitle: 'Snacks que\nte hacen bien',
-      heroSub: 'Ingredientes a tu elección.\nDelivery gratis desde 8 unidades.',
+      heroSub: '',
       heroTag: '100% Artesanal · Sin conservantes',
     },
   },
@@ -393,7 +400,7 @@ const fmt = (n) => `$${n.toLocaleString('es-CL')}`;
 
 function cartTotal()    { return State.cart.reduce((s, i) => s + i.priceTotal, 0); }
 function cartUnits()    { return State.cart.reduce((s, i) => s + i.units, 0); }
-function deliveryUnlocked() { return cartUnits() >= DELIVERY_MIN; }
+function deliveryFree() { return cartTotal() >= DELIVERY_FREE_THRESHOLD; }
 function findCartItem(id, type) { return State.cart.find(i => i.id === id && i.type === type); }
 
 function getPackInfo(product, type) {
@@ -541,8 +548,9 @@ const Views = {
   intro() {
     return `
     <div class="view intro-view active" id="view-intro">
-      <video class="intro-video" src="videos/intro.mp4" autoplay muted playsinline loop></video>
-      <div class="intro-overlay"></div>
+      <video class="intro-video" autoplay muted loop playsinline>
+        <source src="videos/intro.mp4" type="video/mp4">
+      </video>
       <div class="intro-logo-wrap">
         <img src="images/logo.png" alt="Logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -560,7 +568,7 @@ const Views = {
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-truck pill-icon" style="color:var(--accent)"></i>
-          <strong>Delivery gratis +8 uni.</strong>
+          <strong>Delivery gratis +$20.000</strong>
         </span>
         <span class="intro-pill">
           <i class="fa-solid fa-tag pill-icon" style="color:var(--success)"></i>
@@ -580,10 +588,10 @@ const Views = {
 
   /* ── HOME ──────────────────────────────── */
   home() {
-    const units = cartUnits();
-    const unlocked = deliveryUnlocked();
-    const missing = Math.max(0, DELIVERY_MIN - units);
-    const progress = Math.min(100, (units / DELIVERY_MIN) * 100);
+    const total = cartTotal();
+    const isFree = deliveryFree();
+    const remaining = Math.max(0, DELIVERY_FREE_THRESHOLD - total);
+    const progress = Math.min(100, (total / DELIVERY_FREE_THRESHOLD) * 100);
     const products = getProducts();
     const content = AdminState.get('content');
 
@@ -627,15 +635,16 @@ const Views = {
            <button class="btn-ghost" onclick="App.clearFilters()">Limpiar filtros</button>
          </div>`;
 
-    const heroTitleHtml = (content.heroTitle || 'Snacks que te\nhacen bien')
-      .split('\n').join('<br>');
+    const heroTitleHtml = 'Personaliza tu pedido';
 
     return `
     <div class="view home-view active" id="view-home">
 
-      <!-- HERO -->
+      <!-- HERO con VIDEO -->
       <div class="hero has-video" id="hero-section">
-        <video class="hero-video-bg" src="videos/productospersonalizados.mp4" autoplay muted playsinline></video>
+        <video class="hero-bg-video" autoplay muted playsinline preload="none" id="hero-video">
+          <source src="videos/productospersonalizados.mp4" type="video/mp4">
+        </video>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-tag">
@@ -644,13 +653,13 @@ const Views = {
           </div>
           <h1 class="hero-title">${heroTitleHtml}</h1>
           <div class="hero-benefits">
-            <span><i class="fa-solid fa-check"></i> Ingredientes a tu elección</span>
-            <span><i class="fa-solid fa-check"></i> Sin mínimo en tienda</span>
-            <span><i class="fa-solid fa-truck"></i> Delivery gratis desde ${DELIVERY_MIN} unidades</span>
+            <span><i class="fa-solid fa-check"></i> Los ingredientes que tu desees</span>
+            <span><i class="fa-solid fa-check"></i> Sin azúcar añadida</span>
+            <span><i class="fa-solid fa-truck"></i> Delivery gratis desde <span class="neon-price">$20.000</span></span>
           </div>
           <div class="hero-cta">
             <button class="btn-glass" onclick="App.navigate('encargos')">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Encargos
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Personaliza
             </button>
           </div>
         </div>
@@ -660,36 +669,40 @@ const Views = {
       <div class="valor-strip-outer">
         <div class="valor-strip-inner" id="valor-strip-inner">
           <div class="valor-item"><i class="fa-solid fa-store"></i> Sin mínimo en tienda</div>
-          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde ${DELIVERY_MIN} unid.</div>
+          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde $20.000</div>
           <div class="valor-item"><i class="fa-solid fa-tag"></i> Descuento en packs</div>
           <div class="valor-item"><i class="fa-solid fa-pen-to-square"></i> Pedidos personalizados</div>
           <div class="valor-item"><i class="fa-solid fa-leaf"></i> 11 categorías disponibles</div>
           <div class="valor-item"><i class="fa-solid fa-store"></i> Sin mínimo en tienda</div>
-          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde ${DELIVERY_MIN} unid.</div>
+          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde $20.000</div>
           <div class="valor-item"><i class="fa-solid fa-tag"></i> Descuento en packs</div>
           <div class="valor-item"><i class="fa-solid fa-pen-to-square"></i> Pedidos personalizados</div>
           <div class="valor-item"><i class="fa-solid fa-leaf"></i> 11 categorías disponibles</div>
         </div>
       </div>
 
+      <!-- BLOQUE 100% ARTESANAL -->
+      <div class="artesanal-block">
+        <span class="artesanal-text">✦ 100% Artesanal ✦</span>
+        <span class="artesanal-sub">Sin conservantes · Ingredientes reales</span>
+      </div>
+
       <!-- DELIVERY PROGRESS BANNER -->
-      <div class="delivery-banner ${unlocked ? 'unlocked' : ''}">
+      <div class="delivery-banner ${isFree ? 'unlocked' : ''}">
         <div class="db-icon-wrap">
-          <i class="fa-solid fa-${unlocked ? 'circle-check' : 'truck'}"></i>
+          <i class="fa-solid fa-${isFree ? 'circle-check' : 'truck'}"></i>
         </div>
         <div class="db-right">
           <div class="db-text">
-            ${unlocked
-              ? `<strong>¡Delivery activado! 🎉</strong> Tienes ${units} unidades en tu carrito.`
-              : missing > 0
-                ? `Agrega <strong>${missing} producto${missing > 1 ? 's' : ''} más</strong> y activa el delivery gratis`
-                : `Agrega productos para activar el delivery (desde ${DELIVERY_MIN} unidades)`
+            ${isFree
+              ? `<strong>¡Delivery gratis activado! 🎉</strong> Tu pedido supera los $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000`
+              : `Agrega <strong>$${remaining.toLocaleString('es-CL')} más</strong> y activa el delivery gratis`
             }
           </div>
           <div class="db-progress-track">
             <div class="db-progress-fill" style="width:${progress}%"></div>
           </div>
-          <div class="db-progress-label">${units}/${DELIVERY_MIN} unidades</div>
+          <div class="db-progress-label">$${total.toLocaleString('es-CL')} / $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000</div>
         </div>
       </div>
 
@@ -724,6 +737,9 @@ const Views = {
       <!-- GRID -->
       <div class="products-grid">${cards}</div>
 
+      <!-- SECCIÓN PRODUCTOS PERSONALIZADOS -->
+      ${State.activeCategory === 'todos' ? Views._customSection() : ''}
+
       <!-- PACKS DESTACADOS -->
       ${State.activeCategory === 'todos' ? Views._packSection() : ''}
 
@@ -735,7 +751,11 @@ const Views = {
     const imgPath = getProductFirstImage(p.id);
     const imgContent = `<img src="${imgPath}" alt="${p.name}" loading="lazy"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-      <span class="card-img-emoji" style="display:none">${p.emoji}</span>`;
+      <div class="card-img-fallback" style="display:none">
+        <img src="images/logo.png" class="fallback-logo" alt="" />
+        <div class="fallback-beige-overlay"></div>
+        <span class="fallback-nophoto">No-Photo</span>
+      </div>`;
 
     const tagPills = (p.tags || []).slice(0, 2).map(t => {
       const tag = TAGS[t];
@@ -763,6 +783,24 @@ const Views = {
             <i class="fa-solid fa-plus"></i> Pack 4
           </button>
         </div>
+      </div>
+    </div>`;
+  },
+
+  _customSection() {
+    return `
+    <div class="custom-section">
+      <video class="custom-video" autoplay muted loop playsinline preload="none">
+        <source src="videos/productospersonalizados.mp4" type="video/mp4">
+      </video>
+      <div class="custom-overlay"></div>
+      <div class="custom-content">
+        <span class="custom-eyebrow">¿Algo especial?</span>
+        <h3 class="custom-title">Productos<br>Personalizados</h3>
+        <p class="custom-sub">Dinos tu idea y lo hacemos realidad. Cantidades a tu medida, sabores exclusivos.</p>
+        <button class="custom-cta-btn" onclick="App.navigate('encargos')">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Hacer un encargo
+        </button>
       </div>
     </div>`;
   },
@@ -810,7 +848,11 @@ const Views = {
     const imgPath = getProductFirstImage(p.id);
     const heroContent = `<img src="${imgPath}" alt="${p.name}"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-      <span style="display:none;font-size:3.5rem;justify-content:center;align-items:center">${p.emoji}</span>`;
+      <div class="card-img-fallback" style="display:none;width:100%;height:100%">
+        <img src="images/logo.png" class="fallback-logo fallback-logo-lg" alt="" />
+        <div class="fallback-beige-overlay"></div>
+        <span class="fallback-nophoto">No-Photo</span>
+      </div>`;
 
     const typeBtn = (t, label, qtyLabel, price, save) =>
       `<div class="type-btn ${type === t ? 'selected' : ''}" onclick="App.selectType('${t}')">
@@ -878,15 +920,15 @@ const Views = {
 
         <!-- DELIVERY HINT -->
         ${(() => {
-          const u = cartUnits();
-          const missing = Math.max(0, DELIVERY_MIN - u);
-          if (deliveryUnlocked()) {
+          const t = cartTotal();
+          const remaining = Math.max(0, DELIVERY_FREE_THRESHOLD - t);
+          if (deliveryFree()) {
             return `<div class="product-delivery-hint unlocked">
-              <i class="fa-solid fa-circle-check"></i> ¡Delivery activado! Ya tienes ${u} unidades en tu carrito.
+              <i class="fa-solid fa-circle-check"></i> ¡Delivery gratis activado! Tu pedido supera los $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000.
             </div>`;
           } else {
             return `<div class="product-delivery-hint">
-              <i class="fa-solid fa-truck"></i> Agrega ${missing} producto${missing !== 1 ? 's' : ''} más al carrito para activar el delivery gratis.
+              <i class="fa-solid fa-truck"></i> Agrega $${remaining.toLocaleString('es-CL')} más para activar el delivery gratis.
             </div>`;
           }
         })()}
@@ -929,10 +971,11 @@ const Views = {
     }
 
     const units    = cartUnits();
-    const unlocked = deliveryUnlocked();
-    const missing  = Math.max(0, DELIVERY_MIN - units);
-    const progress = Math.min(100, (units / DELIVERY_MIN) * 100);
-    const subtotal = cartTotal();
+    const isFree   = deliveryFree();
+    const total    = cartTotal();
+    const remaining = Math.max(0, DELIVERY_FREE_THRESHOLD - total);
+    const progress = Math.min(100, (total / DELIVERY_FREE_THRESHOLD) * 100);
+    const subtotal = total;
 
     const items = State.cart.map(item => {
       const imgPath = getProductFirstImage(item.id);
@@ -964,15 +1007,15 @@ const Views = {
     }).join('');
 
     /* Progress bar delivery indicator */
-    const deliverySection = unlocked
+    const deliverySection = isFree
       ? `<div class="cart-delivery-unlocked">
            <i class="fa-solid fa-circle-check"></i>
-           <span>¡Delivery activado! Tienes ${units} unidades.</span>
+           <span>¡Delivery gratis activado! Tu pedido supera los $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000.</span>
          </div>`
       : `<div class="cart-delivery-progress">
            <div class="cdp-header">
-             <span class="cdp-text">Te ${missing === 1 ? 'falta' : 'faltan'} <strong>${missing} producto${missing > 1 ? 's' : ''}</strong> para delivery gratis</span>
-             <span class="cdp-fraction">${units}/${DELIVERY_MIN}</span>
+             <span class="cdp-text">Agrega <strong>$${remaining.toLocaleString('es-CL')}</strong> más para delivery gratis</span>
+             <span class="cdp-fraction">$${total.toLocaleString('es-CL')}/$${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}k</span>
            </div>
            <div class="cart-progress-bar">
              <div class="cart-progress-fill" style="width:${progress}%"></div>
@@ -986,15 +1029,15 @@ const Views = {
       <div class="cart-items">${items}</div>
       <div class="cart-summary">
         <div class="summary-row"><span>Subtotal</span><span>${fmt(subtotal)}</span></div>
-        <div class="summary-row"><span>Delivery</span><span>${unlocked ? '🚚 Gratis (coordinar)' : '—'}</span></div>
+        <div class="summary-row"><span>Delivery</span><span>${isFree ? '🚚 Gratis' : 'A coordinar'}</span></div>
         <div class="summary-row total"><span>Total</span><span>${fmt(subtotal)}</span></div>
       </div>
       <button class="cart-checkout-btn mt-16" onclick="App.navigate('checkout')">
         <i class="fa-solid fa-credit-card"></i> Proceder al pago
       </button>
       <div class="cart-policies">
-        🔒 Pago seguro. Aceptamos transferencia bancaria. El pedido se confirma una vez coordinado por WhatsApp.
-        Delivery gratis desde ${DELIVERY_MIN} unidades. Precios en CLP.
+        🔒 Pago seguro. Aceptamos transferencia bancaria. El pedido se confirma por WhatsApp.
+        Delivery gratis en compras sobre $20.000. Precios en CLP.
       </div>
     </div>`;
   },
@@ -1002,9 +1045,7 @@ const Views = {
   /* ── CHECKOUT ──────────────────────────── */
   checkout() {
     if (State.cart.length === 0) { App.navigate('carrito'); return ''; }
-    const unlocked = deliveryUnlocked();
-    const units    = cartUnits();
-    const missing  = Math.max(0, DELIVERY_MIN - units);
+    const isFree   = deliveryFree();
     const subtotal = cartTotal();
     const dm = AdminState.get('deliveryMethods');
 
@@ -1052,12 +1093,8 @@ const Views = {
                  onclick="${deliveryUnavailable ? '' : "App.selectMethod('delivery')"}">
               <i class="fa-solid fa-truck"></i>
               <div class="mo-label">Delivery</div>
-              <div class="mo-sub">${deliveryUnavailable ? 'No disponible' : `Desde ${DELIVERY_MIN} u.`}</div>
+              <div class="mo-sub">${deliveryUnavailable ? 'No disponible' : (isFree ? '🚚 Gratis' : 'A coordinar')}</div>
             </div>
-          </div>
-          <div class="delivery-blocked-msg ${(State.checkoutMethod === 'delivery' && !unlocked) ? '' : 'hidden'}" id="delivery-blocked-msg">
-            <i class="fa-solid fa-circle-exclamation"></i>
-            <span>El delivery se activa con ${DELIVERY_MIN}+ unidades. Te ${missing === 1 ? 'falta' : 'faltan'} ${missing} producto${missing > 1 ? 's' : ''}.</span>
           </div>
         </div>
 
@@ -1080,6 +1117,7 @@ const Views = {
         <div class="checkout-summary">
           <div class="cs-header">Resumen del pedido</div>
           <div class="cs-items">${csItems}</div>
+          <div class="cs-row-delivery"><span>Delivery</span><span>${isFree ? '🚚 Gratis' : 'A coordinar'}</span></div>
           <div class="cs-total"><span>Total</span><span>${fmt(subtotal)}</span></div>
         </div>
 
@@ -1177,7 +1215,7 @@ const Admin = {
     if (!body) return;
     const renderers = {
       productos: Admin.renderProductos,
-      metodos:   Admin.renderMetodos,
+      entrega:   Admin.renderEntrega,
       contenido: Admin.renderContenido,
     };
     if (renderers[tab]) body.innerHTML = renderers[tab]();
@@ -1286,9 +1324,8 @@ const Admin = {
     Admin.editProduct(newId);
   },
 
-  renderMetodos() {
+  renderEntrega() {
     const dm = AdminState.get('deliveryMethods');
-    const pm = AdminState.get('paymentMethods');
     const toggle = (key, obj, label, sub, handler) => {
       const checked = obj[key] ? 'checked' : '';
       return `
@@ -1305,12 +1342,9 @@ const Admin = {
     };
     return `
       <div class="admin-section-title">Métodos de Entrega</div>
-      ${toggle('delivery', dm, '🚚 Delivery', `Envío a domicilio gratis desde ${DELIVERY_MIN} unidades`, 'Admin.toggleDelivery')}
-      ${toggle('retiro', dm, '🏪 Retiro en tienda', 'El cliente retira en la dirección acordada', 'Admin.toggleDelivery')}
-      <div class="admin-section-title" style="margin-top:16px">Métodos de Pago</div>
-      ${toggle('transferencia', pm, '🏦 Transferencia bancaria', 'Pago previo a la entrega', 'Admin.togglePayment')}
-      ${toggle('efectivo', pm, '💵 Efectivo', 'Solo para retiro en tienda', 'Admin.togglePayment')}
-      ${toggle('tarjeta', pm, '💳 Tarjeta (Redcompra/crédito)', 'Disponible con POS móvil', 'Admin.togglePayment')}`;
+      <div class="admin-info-pill"><i class="fa-solid fa-circle-info"></i> Delivery gratis para pedidos sobre $20.000</div>
+      ${toggle('delivery', dm, '🚚 Delivery', 'Envío a domicilio. Gratis sobre $20.000', 'Admin.toggleDelivery')}
+      ${toggle('retiro', dm, '🏪 Retiro en tienda', 'El cliente retira en la dirección acordada', 'Admin.toggleDelivery')}`;
   },
 
   toggleDelivery(key, val) {
@@ -1333,15 +1367,11 @@ const Admin = {
     return `
       <div class="admin-section-title">Textos de la Web</div>
       <div class="admin-field">
-        <label class="admin-label">Título Hero (usa \\n para salto)</label>
+        <label class="admin-label">Título Hero (usa \\n para salto de línea)</label>
         <input class="admin-input" id="ct-heroTitle" value="${c.heroTitle}" />
       </div>
       <div class="admin-field">
-        <label class="admin-label">Subtítulo Hero</label>
-        <textarea class="admin-input" id="ct-heroSub" rows="2" style="resize:none">${c.heroSub}</textarea>
-      </div>
-      <div class="admin-field">
-        <label class="admin-label">Tag del Hero (pequeño)</label>
+        <label class="admin-label">Tag pequeño del Hero</label>
         <input class="admin-input" id="ct-heroTag" value="${c.heroTag}" />
       </div>
       <button class="admin-save-btn" onclick="Admin.saveContent()">
@@ -1352,7 +1382,7 @@ const Admin = {
   saveContent() {
     const c = {
       heroTitle: $('#ct-heroTitle')?.value || AdminState.get('content').heroTitle,
-      heroSub:   $('#ct-heroSub')?.value   || AdminState.get('content').heroSub,
+      heroSub:   AdminState.get('content').heroSub,
       heroTag:   $('#ct-heroTag')?.value   || AdminState.get('content').heroTag,
     };
     AdminState.set('content', c);
@@ -1444,9 +1474,14 @@ const App = {
     }, 800);
   },
 
-  /* ── HOME ANIMATIONS ─────────────────── */
+  /* ── HOME INIT ───────────────────────── */
+  _heroSlideshowTimer: null,
   _initHome() {
-    /* Hero video is handled by the MutationObserver in index.html */
+    const video = $('#hero-video');
+    if (video) {
+      video.playbackRate = 0.5;
+      video.addEventListener('ended', () => video.pause(), { once: true });
+    }
   },
 
   /* ── INTRO BUTTON ──────────────────────── */
@@ -1597,11 +1632,8 @@ const App = {
     const opts = $$('.method-opt');
     if (method === 'retiro'   && dm.retiro   && opts[0]) opts[0].classList.add('selected');
     if (method === 'delivery' && dm.delivery && opts[1]) opts[1].classList.add('selected');
-    const addrField  = $('#address-field');
-    const blockedMsg = $('#delivery-blocked-msg');
-    const unlocked   = deliveryUnlocked();
-    if (addrField)   addrField.classList.toggle('hidden-field', method !== 'delivery');
-    if (blockedMsg)  blockedMsg.classList.toggle('hidden', !(method === 'delivery' && !unlocked));
+    const addrField = $('#address-field');
+    if (addrField) addrField.classList.toggle('hidden-field', method !== 'delivery');
   },
 
   confirmOrder() {
@@ -1619,10 +1651,7 @@ const App = {
     }
 
     if (State.checkoutMethod === 'delivery') {
-      if (!deliveryUnlocked()) {
-        showToast(`Delivery requiere ${DELIVERY_MIN}+ unidades`, '🚫');
-        valid = false;
-      } else if (direccion && !direccion.value.trim()) {
+      if (direccion && !direccion.value.trim()) {
         direccion.classList.add('error');
         $('#err-direccion')?.classList.add('show');
         valid = false;
