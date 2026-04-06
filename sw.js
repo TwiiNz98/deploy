@@ -1,9 +1,17 @@
 /* ============================================================
-   CÍRCULO DE SABORES — Service Worker
-   Cache-first strategy for offline support
+   CÍRCULO DE SABORES — Service Worker v2.0
+   Strategies:
+     · Static assets  → Cache-first  (long TTL)
+     · Own-origin     → Stale-While-Revalidate (offline-resilient)
+     · Firebase / CDN → Network-only (bypass cache)
    ============================================================ */
-const CACHE_NAME  = 'cds-cache-v1';
-const CORE_ASSETS = [
+
+const CACHE_VERSION  = 'cds-v2';
+const STATIC_CACHE   = `${CACHE_VERSION}-static`;
+const DYNAMIC_CACHE  = `${CACHE_VERSION}-dynamic`;
+
+/* Core assets pre-cached on install */
+const STATIC_ASSETS = [
   './',
   './index.html',
   './app.js',
@@ -11,63 +19,138 @@ const CORE_ASSETS = [
   './manifest.json',
 ];
 
-/* ── INSTALL: cache core assets ─────────────────────────── */
+/* Hosts that must always hit the network (auth, Firestore, etc.) */
+const NETWORK_ONLY_HOSTS = [
+  'firestore.googleapis.com',
+  'www.googleapis.com',
+  'identitytoolkit.googleapis.com',
+  'securetoken.googleapis.com',
+  'firebase.googleapis.com',
+  'firebasestorage.googleapis.com',
+];
+
+/* External static resources to cache aggressively */
+const CACHEABLE_CDN_HOSTS = [
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'cdnjs.cloudflare.com',
+];
+
+/* ── INSTALL: pre-cache core assets ─────────────────────── */
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(CORE_ASSETS);
-    })
+    caches.open(STATIC_CACHE).then(cache =>
+      /* Use allSettled so one bad asset doesn't break the whole SW */
+      Promise.allSettled(STATIC_ASSETS.map(url =>
+        cache.add(url).catch(err => console.warn('[SW] pre-cache miss:', url, err))
+      ))
+    )
   );
+  /* Take control immediately; page refreshes after client.claim() */
   self.skipWaiting();
 });
 
-/* ── ACTIVATE: purge old caches ─────────────────────────── */
+/* ── ACTIVATE: purge stale caches ───────────────────────── */
 self.addEventListener('activate', event => {
+  const KEEP = [STATIC_CACHE, DYNAMIC_CACHE];
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(k => !KEEP.includes(k)).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-/* ── FETCH: cache-first, network fallback ───────────────── */
+/* ── FETCH ───────────────────────────────────────────────── */
 self.addEventListener('fetch', event => {
-  // Only handle GET requests
+  /* Ignore non-GET and non-HTTP requests */
   if (event.request.method !== 'GET') return;
-
-  // Skip non-http(s) schemes (chrome-extension, etc.)
   if (!event.request.url.startsWith('http')) return;
 
-  // Skip Firebase / external API requests — always network
   const url = new URL(event.request.url);
-  const skipHosts = ['firestore.googleapis.com', 'www.googleapis.com',
-                     'fonts.googleapis.com', 'fonts.gstatic.com',
-                     'cdnjs.cloudflare.com', 'www.gstatic.com'];
-  if (skipHosts.some(h => url.hostname.includes(h))) return;
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then(response => {
-          // Cache successful responses for local assets
-          if (response.ok && url.origin === self.location.origin) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback: return index.html for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-        });
-    })
-  );
+  /* Always network for Firebase and auth endpoints */
+  if (NETWORK_ONLY_HOSTS.some(h => url.hostname.includes(h))) return;
+
+  /* CDN fonts/icons: cache-first, very long TTL */
+  if (CACHEABLE_CDN_HOSTS.some(h => url.hostname.includes(h))) {
+    event.respondWith(_cacheFirst(event.request, STATIC_CACHE));
+    return;
+  }
+
+  /* Own-origin assets: stale-while-revalidate */
+  if (url.origin === self.location.origin) {
+    event.respondWith(_staleWhileRevalidate(event.request));
+    return;
+  }
 });
+
+/* ── MESSAGE: runtime control ───────────────────────────── */
+self.addEventListener('message', event => {
+  if (!event.data) return;
+  switch (event.data.type) {
+    case 'SKIP_WAITING':
+      self.skipWaiting();
+      break;
+    case 'CLEAR_CACHE':
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+      break;
+    case 'PING':
+      event.source?.postMessage({ type: 'PONG', version: CACHE_VERSION });
+      break;
+  }
+});
+
+/* ── STRATEGY: Cache-first ──────────────────────────────── */
+async function _cacheFirst(request, cacheName = DYNAMIC_CACHE) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response('Sin conexión', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+}
+
+/* ── STRATEGY: Stale-while-revalidate ──────────────────── */
+async function _staleWhileRevalidate(request) {
+  const cache  = await caches.open(DYNAMIC_CACHE);
+  const cached = await cache.match(request);
+
+  /* Kick off background refresh (fire-and-forget) */
+  const revalidate = fetch(request)
+    .then(response => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => null);
+
+  if (cached) {
+    revalidate; /* intentional: return stale while updating */
+    return cached;
+  }
+
+  /* No cache: wait for network */
+  const fresh = await revalidate;
+  if (fresh) return fresh;
+
+  /* Offline navigation fallback: serve shell */
+  if (request.mode === 'navigate') {
+    const shell = await cache.match('./index.html');
+    if (shell) return shell;
+  }
+
+  return new Response('Sin conexión', {
+    status: 503,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+}

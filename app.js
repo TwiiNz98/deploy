@@ -333,13 +333,6 @@ const BASE_PRODUCTS = [
 
 const WHATSAPP_NUMBER = '56950147783';
 
-/* ── HERO IMAGES (filesystem-based) ─────────────────────── */
-const HERO_IMAGES = [
-  'images/hero/1.jpg',
-  'images/hero/2.jpg',
-  'images/hero/3.jpg',
-];
-
 /* ── ADMIN STATE ────────────────────────────────────────── */
 const AdminState = {
   _d: {
@@ -548,9 +541,8 @@ const Views = {
   intro() {
     return `
     <div class="view intro-view active" id="view-intro">
-      <video class="intro-video" autoplay muted loop playsinline>
-        <source src="videos/intro.mp4" type="video/mp4">
-      </video>
+      <video class="intro-video" src="videos/intro.mp4" autoplay muted playsinline loop></video>
+      <div class="intro-overlay"></div>
       <div class="intro-logo-wrap">
         <img src="images/logo.png" alt="Logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -594,7 +586,6 @@ const Views = {
     const progress = Math.min(100, (units / DELIVERY_MIN) * 100);
     const products = getProducts();
     const content = AdminState.get('content');
-    const hasHeroImages = HERO_IMAGES.length > 0;
 
     const filtered = products.filter(p => {
       const matchCat = State.activeCategory === 'todos' || p.category === State.activeCategory;
@@ -643,8 +634,8 @@ const Views = {
     <div class="view home-view active" id="view-home">
 
       <!-- HERO -->
-      <div class="hero${hasHeroImages ? ' has-images' : ''}" id="hero-section">
-        <div class="hero-slideshow-bg" id="hero-slideshow-bg"></div>
+      <div class="hero has-video" id="hero-section">
+        <video class="hero-video-bg" src="videos/productospersonalizados.mp4" autoplay muted playsinline></video>
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-tag">
@@ -1454,28 +1445,8 @@ const App = {
   },
 
   /* ── HOME ANIMATIONS ─────────────────── */
-  _heroSlideshowTimer: null,
   _initHome() {
-    if (HERO_IMAGES.length > 0) {
-      const ss = $('#hero-slideshow-bg');
-      if (ss) {
-        ss.innerHTML = HERO_IMAGES.map((src, i) =>
-          `<div class="hs-slide${i === 0 ? ' active' : ''}"
-               style="background-image:url('${src}')"></div>`
-        ).join('');
-        if (HERO_IMAGES.length > 1) {
-          let cur = 0;
-          clearInterval(App._heroSlideshowTimer);
-          App._heroSlideshowTimer = setInterval(() => {
-            const slides = ss.querySelectorAll('.hs-slide');
-            if (!slides.length) { clearInterval(App._heroSlideshowTimer); return; }
-            slides[cur].classList.remove('active');
-            cur = (cur + 1) % slides.length;
-            slides[cur].classList.add('active');
-          }, 4500);
-        }
-      }
-    }
+    /* Hero video is handled by the MutationObserver in index.html */
   },
 
   /* ── INTRO BUTTON ──────────────────────── */
