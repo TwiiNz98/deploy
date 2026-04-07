@@ -48,6 +48,11 @@
         <span>Ver Productos</span>
         <i class="fa-solid fa-chevron-right ham-arrow"></i>
       </button>
+      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('pedidos')">
+        <i class="fa-solid fa-clipboard-list"></i>
+        <span>Mis Pedidos</span>
+        <i class="fa-solid fa-chevron-right ham-arrow"></i>
+      </button>
       <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('encargos')">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
         <span>Realizar Encargos</span>
@@ -109,6 +114,12 @@
       <button class="admin-tab active" onclick="Admin.showTab('productos', this)">
         <i class="fa-solid fa-box-open"></i> Productos
       </button>
+      <button class="admin-tab" onclick="Admin.showTab('pedidos', this)">
+        <i class="fa-solid fa-clipboard-list"></i> Pedidos
+      </button>
+      <button class="admin-tab" onclick="Admin.showTab('cupones', this)">
+        <i class="fa-solid fa-ticket"></i> Cupones
+      </button>
       <button class="admin-tab" onclick="Admin.showTab('entrega', this)">
         <i class="fa-solid fa-truck"></i> Entrega
       </button>
@@ -121,6 +132,7 @@
     </div>
   </div>
 
+  <script src="data-layer.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

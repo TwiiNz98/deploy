@@ -340,7 +340,7 @@ const HERO_IMAGES = [
   'images/hero/3.jpg',
 ];
 
-/* ── ADMIN STATE ────────────────────────────────────────── */
+/* ── ADMIN STATE (DataLayer) ────────────────────────────── */
 const AdminState = {
   _d: {
     products: null,
@@ -354,22 +354,17 @@ const AdminState = {
   },
 
   load() {
-    try {
-      const s = localStorage.getItem('cds_admin_v3');
-      if (s) {
-        const p = JSON.parse(s);
-        if (p.products)        this._d.products = p.products;
-        if (p.deliveryMethods) Object.assign(this._d.deliveryMethods, p.deliveryMethods);
-        if (p.paymentMethods)  Object.assign(this._d.paymentMethods, p.paymentMethods);
-        if (p.content)         Object.assign(this._d.content, p.content);
-      }
-    } catch(e) {}
+    const config = DataLayer.config.get();
+    if (config.deliveryMethods) Object.assign(this._d.deliveryMethods, config.deliveryMethods);
+    if (config.content) Object.assign(this._d.content, config.content);
+    this._d.products = DataLayer.products.getActive();
   },
 
   save() {
-    try {
-      localStorage.setItem('cds_admin_v3', JSON.stringify(this._d));
-    } catch(e) { showToast('⚠️ No se pudo guardar (espacio lleno)', '⚠️'); }
+    DataLayer.config.update({
+      deliveryMethods: this._d.deliveryMethods,
+      content: this._d.content,
+    });
   },
 
   get(k)    { return this._d[k]; },
@@ -464,11 +459,13 @@ const Cart = {
         priceTotal: qty * info.price,
       });
     }
+    Cart._persist();
     Cart.refreshBadge();
   },
 
   remove(id, type) {
     State.cart = State.cart.filter(i => !(i.id === id && i.type === type));
+    Cart._persist();
     Cart.refreshBadge();
   },
 
@@ -479,12 +476,18 @@ const Cart = {
     item.qty = Math.max(1, item.qty + delta);
     item.units = item.qty * info.units;
     item.priceTotal = item.qty * item.priceUnit;
+    Cart._persist();
     Cart.refreshBadge();
   },
 
   clear() {
     State.cart = [];
+    Cart._persist();
     Cart.refreshBadge();
+  },
+
+  _persist() {
+    DataLayer.cart.save(State.cart);
   },
 
   refreshBadge() {
@@ -635,7 +638,8 @@ const Views = {
            <button class="btn-ghost" onclick="App.clearFilters()">Limpiar filtros</button>
          </div>`;
 
-    const heroTitleHtml = 'Personaliza tu pedido';
+    const heroTitleHtml = 'Personaliza tus<br>snacks favoritos';
+    const config = DataLayer.config.get();
 
     return `
     <div class="view home-view active" id="view-home">
@@ -648,15 +652,10 @@ const Views = {
         <div class="hero-overlay"></div>
         <div class="hero-content">
           <div class="hero-tag">
-            <i class="fa-solid fa-leaf" style="color:var(--success)"></i>
+            <i class="fa-solid fa-leaf" style="color:#fff"></i>
             <span>${content.heroTag || '100% Artesanal · Sin conservantes'}</span>
           </div>
           <h1 class="hero-title">${heroTitleHtml}</h1>
-          <div class="hero-benefits">
-            <span><i class="fa-solid fa-check"></i> Los ingredientes que tu desees</span>
-            <span><i class="fa-solid fa-check"></i> Sin azúcar añadida</span>
-            <span><i class="fa-solid fa-truck"></i> Delivery gratis desde <span class="neon-price">$20.000</span></span>
-          </div>
           <div class="hero-cta">
             <button class="btn-glass" onclick="App.navigate('encargos')">
               <i class="fa-solid fa-wand-magic-sparkles"></i> Personaliza
@@ -665,26 +664,20 @@ const Views = {
         </div>
       </div>
 
-      <!-- VALOR STRIP -->
+      <!-- VALOR STRIP (marquee) -->
       <div class="valor-strip-outer">
         <div class="valor-strip-inner" id="valor-strip-inner">
-          <div class="valor-item"><i class="fa-solid fa-store"></i> Sin mínimo en tienda</div>
-          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde $20.000</div>
-          <div class="valor-item"><i class="fa-solid fa-tag"></i> Descuento en packs</div>
-          <div class="valor-item"><i class="fa-solid fa-pen-to-square"></i> Pedidos personalizados</div>
-          <div class="valor-item"><i class="fa-solid fa-leaf"></i> 11 categorías disponibles</div>
-          <div class="valor-item"><i class="fa-solid fa-store"></i> Sin mínimo en tienda</div>
-          <div class="valor-item"><i class="fa-solid fa-truck"></i> Delivery gratis desde $20.000</div>
-          <div class="valor-item"><i class="fa-solid fa-tag"></i> Descuento en packs</div>
-          <div class="valor-item"><i class="fa-solid fa-pen-to-square"></i> Pedidos personalizados</div>
-          <div class="valor-item"><i class="fa-solid fa-leaf"></i> 11 categorías disponibles</div>
+          <div class="valor-item"><i class="fa-solid fa-seedling"></i> Ingredientes naturales</div>
+          <div class="valor-item"><i class="fa-solid fa-box-open"></i> Packs con descuento</div>
+          <div class="valor-item"><i class="fa-solid fa-heart"></i> Hecho con amor</div>
+          <div class="valor-item"><i class="fa-solid fa-ban"></i> Sin conservantes</div>
+          <div class="valor-item"><i class="fa-solid fa-rotate"></i> Pedidos personalizados</div>
+          <div class="valor-item"><i class="fa-solid fa-seedling"></i> Ingredientes naturales</div>
+          <div class="valor-item"><i class="fa-solid fa-box-open"></i> Packs con descuento</div>
+          <div class="valor-item"><i class="fa-solid fa-heart"></i> Hecho con amor</div>
+          <div class="valor-item"><i class="fa-solid fa-ban"></i> Sin conservantes</div>
+          <div class="valor-item"><i class="fa-solid fa-rotate"></i> Pedidos personalizados</div>
         </div>
-      </div>
-
-      <!-- BLOQUE 100% ARTESANAL -->
-      <div class="artesanal-block">
-        <span class="artesanal-text">✦ 100% Artesanal ✦</span>
-        <span class="artesanal-sub">Sin conservantes · Ingredientes reales</span>
       </div>
 
       <!-- DELIVERY PROGRESS BANNER -->
@@ -695,18 +688,30 @@ const Views = {
         <div class="db-right">
           <div class="db-text">
             ${isFree
-              ? `<strong>¡Delivery gratis activado! 🎉</strong> Tu pedido supera los $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000`
+              ? `<strong>¡Delivery gratis activado! 🎉</strong> Tu pedido supera los <strong class="delivery-highlight">$${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000</strong>`
               : `Agrega <strong>$${remaining.toLocaleString('es-CL')} más</strong> y activa el delivery gratis`
             }
           </div>
           <div class="db-progress-track">
             <div class="db-progress-fill" style="width:${progress}%"></div>
           </div>
-          <div class="db-progress-label">$${total.toLocaleString('es-CL')} / $${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000</div>
+          <div class="db-progress-label">$${total.toLocaleString('es-CL')} / <strong class="delivery-highlight">$${(DELIVERY_FREE_THRESHOLD/1000).toFixed(0)}.000</strong></div>
+          <div class="delivery-zones-inline">
+            <button class="dz-toggle-inline" onclick="this.parentElement.querySelector('.dz-list-inline').classList.toggle('open')">
+              <i class="fa-solid fa-location-dot"></i> Ver zonas
+              <i class="fa-solid fa-chevron-down dz-arrow"></i>
+            </button>
+            <div class="dz-list-inline">
+              ${(config.deliveryZones || []).filter(z => z.active).map(z => `
+                <div class="dz-item"><span>${z.name}</span><span>${z.price === 0 ? 'Gratis' : fmt(z.price)}</span></div>
+              `).join('')}
+              <div class="dz-item dz-retiro"><span>🏪 Retiro en tienda</span><span>Gratis</span></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- BÚSQUEDA -->
+      <!-- BÚSQUEDA + CATEGORÍAS -->
       <div class="search-wrap">
         <div class="search-inner">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -721,40 +726,78 @@ const Views = {
       </div>
 
       <!-- CATEGORÍAS -->
-      <div class="filters-wrap cat-filters">${categoryBtns}</div>
+      <div class="filters-wrap cat-filters" id="cat-filters">${categoryBtns}</div>
 
       <!-- TAGS RÁPIDOS -->
-      <div class="tag-filters-wrap">${tagBtns}</div>
+      <div class="tag-filters-wrap" id="tag-filters-wrap">${tagBtns}</div>
 
       <!-- SECCIÓN LABEL -->
-      <div class="section-label-row">
+      <div class="section-label-row" id="section-label-row">
         <span class="section-label">
           ${State.activeCategory !== 'todos' ? CATEGORY_META[State.activeCategory]?.label || 'Catálogo' : 'Catálogo'}
         </span>
-        <span class="section-count">${filtered.length} producto${filtered.length !== 1 ? 's' : ''}</span>
+        <span class="section-count" id="section-count">${filtered.length} producto${filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       <!-- GRID -->
-      <div class="products-grid">${cards}</div>
+      <div class="products-grid" id="products-grid">${cards}</div>
 
       <!-- SECCIÓN PRODUCTOS PERSONALIZADOS -->
-      ${State.activeCategory === 'todos' ? Views._customSection() : ''}
+      <div id="custom-section-wrap">${State.activeCategory === 'todos' ? Views._customSection() : ''}</div>
 
       <!-- PACKS DESTACADOS -->
-      ${State.activeCategory === 'todos' ? Views._packSection() : ''}
+      <div id="packs-section-wrap">${State.activeCategory === 'todos' ? Views._packSection() : ''}</div>
 
+      <!-- TESTIMONIOS -->
+      <div id="testimonials-wrap">${State.activeCategory === 'todos' ? Views._testimonialsSection() : ''}</div>
+
+      <!-- FAQ -->
+      <div id="faq-wrap">${State.activeCategory === 'todos' ? Views._faqSection() : ''}</div>
+
+    </div>`;
+  },
+
+  _testimonialsSection() {
+    const testimonials = DataLayer.testimonials.getAll();
+    return `
+    <div class="testimonials-section">
+      <h3 class="test-title">Lo que dicen nuestros clientes</h3>
+      <div class="test-scroll">
+        ${testimonials.map(t => `
+          <div class="test-card">
+            <div class="test-stars">${Array.from({length: 5}, (_, i) => `<span class="star${i < t.stars ? '' : ' empty'}">★</span>`).join('')}</div>
+            <div class="test-text">"${t.text}"</div>
+            <div class="test-author">${t.name}, ${t.location}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  },
+
+  _faqSection() {
+    const cfg = DataLayer.config.get();
+    return `
+    <div class="faq-section">
+      <h3 class="faq-title">Preguntas Frecuentes</h3>
+      ${(cfg.faq || []).map((item, i) => `
+        <div class="faq-item" onclick="this.classList.toggle('open')">
+          <div class="faq-q">${item.q} <i class="fa-solid fa-chevron-down"></i></div>
+          <div class="faq-a">${item.a}</div>
+        </div>
+      `).join('')}
     </div>`;
   },
 
   _productCard(p) {
     const disc4 = saveDiscount('pack4', p);
     const imgPath = getProductFirstImage(p.id);
+    const isFav = DataLayer.favorites.has(p.id);
     const imgContent = `<img src="${imgPath}" alt="${p.name}" loading="lazy"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
       <div class="card-img-fallback" style="display:none">
         <img src="images/logo.png" class="fallback-logo" alt="" />
         <div class="fallback-beige-overlay"></div>
-        <span class="fallback-nophoto">No-Photo</span>
+        <span class="fallback-nophoto">Cargando</span>
       </div>`;
 
     const tagPills = (p.tags || []).slice(0, 2).map(t => {
@@ -766,7 +809,15 @@ const Views = {
     return `
     <div class="product-card" onclick="App.openProduct('${p.id}')">
       ${p.badge ? `<span class="card-badge ${p.badgeStyle || ''}">${p.badge}</span>` : ''}
-      <div class="card-img-placeholder">${imgContent}</div>
+      <div class="card-img-placeholder">
+        ${imgContent}
+        <button class="card-fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); App.toggleFav('${p.id}', this)" aria-label="Favorito">
+          <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
+        </button>
+        <button class="card-share-btn" onclick="event.stopPropagation(); App.shareProduct('${p.id}', this)" aria-label="Compartir">
+          <i class="fa-solid fa-share-nodes"></i>
+        </button>
+      </div>
       <div class="card-body">
         <div class="card-name">${p.name}</div>
         ${tagPills ? `<div class="card-tags">${tagPills}</div>` : ''}
@@ -851,7 +902,7 @@ const Views = {
       <div class="card-img-fallback" style="display:none;width:100%;height:100%">
         <img src="images/logo.png" class="fallback-logo fallback-logo-lg" alt="" />
         <div class="fallback-beige-overlay"></div>
-        <span class="fallback-nophoto">No-Photo</span>
+        <span class="fallback-nophoto">Cargando</span>
       </div>`;
 
     const typeBtn = (t, label, qtyLabel, price, save) =>
@@ -941,12 +992,8 @@ const Views = {
             <button class="counter-btn" onclick="App.changeQty(1)">+</button>
           </div>
         </div>
-        <div class="total-row">
-          <span class="tr-label">Total</span>
-          <span class="tr-amount" id="detail-total">${fmt(total)}</span>
-        </div>
         <button class="btn-add-full" onclick="App.addToCart()">
-          <i class="fa-solid fa-bag-shopping"></i> Agregar al carrito · ${fmt(total)}
+          <i class="fa-solid fa-bag-shopping"></i> Agregar al carrito — ${fmt(total)}
         </button>
       </div>
 
@@ -1048,6 +1095,9 @@ const Views = {
     const isFree   = deliveryFree();
     const subtotal = cartTotal();
     const dm = AdminState.get('deliveryMethods');
+    const coupon = State.appliedCoupon || null;
+    const discount = coupon ? App._calcDiscount(subtotal, coupon) : 0;
+    const finalTotal = subtotal - discount;
 
     const csItems = State.cart.map(i =>
       `<div class="cs-item">
@@ -1114,15 +1164,28 @@ const Views = {
                     style="resize:none"></textarea>
         </div>
 
+        <div class="coupon-section">
+          <div class="coupon-input-row">
+            <input type="text" id="coupon-input" class="coupon-input" placeholder="Código de cupón"
+                   value="${coupon ? coupon.code : ''}" />
+            <button class="coupon-apply-btn" onclick="App.applyCoupon()">
+              ${coupon ? '✓' : 'Aplicar'}
+            </button>
+          </div>
+          ${coupon ? `<div class="coupon-applied"><i class="fa-solid fa-check-circle"></i> ${coupon.label} <button class="coupon-remove" onclick="App.removeCoupon()">✕</button></div>` : ''}
+          <div id="coupon-msg" class="coupon-msg"></div>
+        </div>
+
         <div class="checkout-summary">
           <div class="cs-header">Resumen del pedido</div>
           <div class="cs-items">${csItems}</div>
           <div class="cs-row-delivery"><span>Delivery</span><span>${isFree ? '🚚 Gratis' : 'A coordinar'}</span></div>
-          <div class="cs-total"><span>Total</span><span>${fmt(subtotal)}</span></div>
+          ${discount > 0 ? `<div class="cs-row-discount"><span>Descuento cupón</span><span>-${fmt(discount)}</span></div>` : ''}
+          <div class="cs-total"><span>Total</span><span>${fmt(finalTotal)}</span></div>
         </div>
 
         <button class="btn-confirm" onclick="App.confirmOrder()">
-          <i class="fa-solid fa-check-circle"></i> Confirmar pedido · ${fmt(subtotal)}
+          <i class="fa-solid fa-check-circle"></i> Confirmar pedido · ${fmt(finalTotal)}
         </button>
       </div>
     </div>`;
@@ -1169,6 +1232,88 @@ const Views = {
     </div>`;
   },
 
+  /* ── ONBOARDING ─────────────────────────── */
+  onboarding() {
+    return `
+    <div class="onboarding-overlay" id="onboarding-overlay">
+      <div class="onboarding-card">
+        <button class="onboarding-close" onclick="App.skipOnboarding()">✕</button>
+        <div class="onboarding-logo">🌿</div>
+        <h2 class="onboarding-title">Bienvenido/a a<br>Círculo de Sabores</h2>
+        <p class="onboarding-sub">Barras y snacks artesanales hechos con ingredientes reales.</p>
+        <div class="onboarding-steps">
+          <div class="onboarding-step"><span class="step-num">1</span> Elige tus productos</div>
+          <div class="onboarding-step"><span class="step-num">2</span> Confirma por WhatsApp</div>
+          <div class="onboarding-step"><span class="step-num">3</span> Recibe en tu puerta 🚚</div>
+        </div>
+        <div class="onboarding-coupon">
+          <span class="coupon-badge">🎁</span>
+          <span class="coupon-text">Usa el código <strong>BIENVENIDO10</strong> y obtén <strong>10% OFF</strong></span>
+        </div>
+        <button class="onboarding-cta" onclick="App.startOnboarding()">
+          <i class="fa-solid fa-bag-shopping"></i> ¡Empezar a comprar!
+        </button>
+        <button class="onboarding-secondary" onclick="App.skipOnboarding()">
+          Ver productos primero
+        </button>
+      </div>
+    </div>`;
+  },
+
+  /* ── MIS PEDIDOS ─────────────────────────── */
+  pedidos() {
+    const orders = DataLayer.orders.getAll();
+    if (orders.length === 0) {
+      return `
+      <div class="view pedidos-view active" id="view-pedidos">
+        <div class="view-header"><h2>Mis Pedidos</h2></div>
+        <div class="orders-empty">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <p>Aún no tienes pedidos.<br>¡Haz tu primera compra!</p>
+          <button class="btn-primary" onclick="App.navigate('home')">
+            <i class="fa-solid fa-store"></i> Ver productos
+          </button>
+        </div>
+      </div>`;
+    }
+
+    const items = orders.map(o => {
+      const statusIcons = {
+        pending: { icon: 'fa-clock', label: 'Pendiente', cls: 'pending' },
+        preparing: { icon: 'fa-fire', label: 'En preparación', cls: 'preparing' },
+        ready: { icon: 'fa-check-circle', label: 'Listo para retirar', cls: 'ready' },
+        delivered: { icon: 'fa-box-open', label: 'Entregado', cls: 'delivered' },
+        cancelled: { icon: 'fa-times-circle', label: 'Cancelado', cls: 'cancelled' },
+      };
+      const st = statusIcons[o.status] || statusIcons.pending;
+      const date = new Date(o.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      return `
+      <div class="order-card">
+        <div class="order-card-header">
+          <span class="order-card-id">#${o.id.slice(-6).toUpperCase()}</span>
+          <span class="order-card-date">${date}</span>
+        </div>
+        <div class="order-card-items">
+          ${(o.items || []).map(i => `${i.emoji} ${i.name} ×${i.qty}`).join('<br>')}
+        </div>
+        <div class="order-card-footer">
+          <span class="order-card-total">$${(o.total || 0).toLocaleString('es-CL')}</span>
+          <span class="order-card-status status-${st.cls}">
+            <i class="fa-solid ${st.icon}"></i> ${st.label}
+          </span>
+        </div>
+        ${o.status === 'delivered' ? `<button class="btn-reorder" onclick="App.reorder('${o.id}')"><i class="fa-solid fa-rotate"></i> Repetir pedido</button>` : ''}
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="view pedidos-view active" id="view-pedidos">
+      <div class="view-header"><h2>Mis Pedidos</h2></div>
+      <div class="orders-list">${items}</div>
+    </div>`;
+  },
+
   /* ── CONFIRMACIÓN ──────────────────────── */
   confirmacion() {
     return `
@@ -1181,11 +1326,17 @@ const Views = {
       <h2 class="confirm-title">¡Pedido listo!</h2>
       <p class="confirm-sub">Tu pedido fue enviado por WhatsApp. Nos pondremos en contacto para coordinar la entrega.</p>
       <div class="confirm-actions">
-        <button class="btn-primary" onclick="App.navigate('home')">
+        <button class="btn-primary" onclick="App.navigate('pedidos')">
+          <i class="fa-solid fa-clipboard-list"></i> Ver mis pedidos
+        </button>
+        <button class="btn-secondary" onclick="App.navigate('home')">
           <i class="fa-solid fa-store"></i> Seguir comprando
         </button>
-        <button class="btn-secondary" onclick="App.navigate('encargos')">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Hacer un encargo
+      </div>
+      <div class="confirm-share">
+        <p>Comparte tu experiencia con nosotros</p>
+        <button class="btn-share-ig" onclick="App.shareToInstagram()">
+          <i class="fa-brands fa-instagram"></i> Síguenos en Instagram
         </button>
       </div>
     </div>`;
@@ -1215,6 +1366,8 @@ const Admin = {
     if (!body) return;
     const renderers = {
       productos: Admin.renderProductos,
+      pedidos:   Admin.renderPedidos,
+      cupones:   Admin.renderCupones,
       entrega:   Admin.renderEntrega,
       contenido: Admin.renderContenido,
     };
@@ -1238,6 +1391,179 @@ const Admin = {
       <button class="admin-save-btn" onclick="Admin.addProduct()" style="background:var(--primary);margin-top:4px">
         <i class="fa-solid fa-plus"></i> Nuevo producto
       </button>`;
+  },
+
+  renderPedidos() {
+    const orders = DataLayer.orders.getAll();
+    const pending = DataLayer.orders.getByStatus('pending').length;
+    const preparing = DataLayer.orders.getByStatus('preparing').length;
+    const ready = DataLayer.orders.getByStatus('ready').length;
+    const delivered = DataLayer.orders.getByStatus('delivered').length;
+    const revenue = DataLayer.stats.getTotalRevenue();
+    const avgTicket = DataLayer.stats.getAvgTicket();
+
+    const statsCards = `
+      <div class="admin-stats-grid">
+        <div class="admin-stat-card">
+          <div class="admin-stat-value">${orders.length}</div>
+          <div class="admin-stat-label">Total Pedidos</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value">${fmt(revenue)}</div>
+          <div class="admin-stat-label">Ingresos</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value">${pending}</div>
+          <div class="admin-stat-label">Pendientes</div>
+        </div>
+        <div class="admin-stat-card">
+          <div class="admin-stat-value">${fmt(avgTicket)}</div>
+          <div class="admin-stat-label">Ticket Promedio</div>
+        </div>
+      </div>`;
+
+    if (orders.length === 0) {
+      return `
+        <div class="admin-section-title">Pedidos</div>
+        ${statsCards}
+        <p class="admin-empty">No hay pedidos aún</p>`;
+    }
+
+    const orderCards = orders.map(o => {
+      const statusIcons = {
+        pending: { icon: 'fa-clock', label: 'Pendiente', cls: 'pending' },
+        preparing: { icon: 'fa-fire', label: 'En preparación', cls: 'preparing' },
+        ready: { icon: 'fa-check-circle', label: 'Listo', cls: 'ready' },
+        delivered: { icon: 'fa-box-open', label: 'Entregado', cls: 'delivered' },
+        cancelled: { icon: 'fa-times-circle', label: 'Cancelado', cls: 'cancelled' },
+      };
+      const st = statusIcons[o.status] || statusIcons.pending;
+      const date = new Date(o.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      const flow = {
+        pending: ['preparing', 'cancelled'],
+        preparing: ['ready'],
+        ready: ['delivered'],
+        delivered: [],
+        cancelled: []
+      };
+      const actions = (flow[o.status] || []).map(s =>
+        `<button onclick="Admin.updateOrderStatus('${o.id}','${s}')">${Admin._statusLabel(s)}</button>`
+      ).join('');
+
+      return `
+      <div class="admin-order-card status-${o.status}">
+        <div class="order-header">
+          <span class="order-id">#${(o.id || '').slice(-6).toUpperCase()}</span>
+          <span class="order-status">${st.label}</span>
+          <span class="order-date">${date}</span>
+        </div>
+        <div class="order-customer">${o.customerName || ''} · ${o.customerPhone || ''}</div>
+        <div class="order-items">
+          ${(o.items || []).map(i => `${i.emoji || ''} ${i.name} ×${i.qty}`).join('<br>')}
+        </div>
+        <div class="order-total">Total: $${(o.total || 0).toLocaleString('es-CL')}</div>
+        <div class="order-method">${o.deliveryMethod === 'delivery' ? '🚚 Delivery' : '🏪 Retiro'}</div>
+        ${o.deliveryMethod === 'delivery' && o.address ? `<div class="order-address">📍 ${o.address}</div>` : ''}
+        ${o.notes ? `<div class="order-notes">📝 ${o.notes}</div>` : ''}
+        <div class="order-actions">${actions}</div>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="admin-section-title">Pedidos (${orders.length})</div>
+      ${statsCards}
+      ${orderCards}
+      <button class="admin-export-btn" onclick="DataLayer.orders.exportCSV()">
+        <i class="fa-solid fa-download"></i> Exportar pedidos a CSV
+      </button>`;
+  },
+
+  updateOrderStatus(orderId, status) {
+    DataLayer.orders.updateStatus(orderId, status);
+    Admin.showTab('pedidos', $$('.admin-tab')[1]);
+    showToast(`Pedido actualizado: ${Admin._statusLabel(status)}`, '✅');
+  },
+
+  _statusLabel(status) {
+    const labels = {
+      pending: '⏳ Pendiente',
+      preparing: '🔥 En preparación',
+      ready: '✅ Listo',
+      delivered: '📦 Entregado',
+      cancelled: '❌ Cancelado'
+    };
+    return labels[status] || status;
+  },
+
+  renderCupones() {
+    const coupons = DataLayer.coupons.getAll();
+    const rows = Object.entries(coupons).map(([code, c]) => `
+      <div class="admin-coupon-row ${c.active ? '' : 'inactive'}">
+        <div class="admin-coupon-code">${code}</div>
+        <div class="admin-coupon-label">${c.label || ''}</div>
+        <div class="admin-coupon-detail">
+          ${c.type === 'percent' ? c.discount + '%' : c.type === 'fixed' ? fmt(c.discount) : '🚚 Envío gratis'}
+          ${c.minPurchase ? ' · Mín. ' + fmt(c.minPurchase) : ''}
+        </div>
+        <div class="admin-coupon-uses">${c.usedCount || 0}/${c.maxUses || '∞'}</div>
+        <div class="admin-coupon-actions">
+          <button onclick="DataLayer.coupons.toggle('${code}'); Admin.showTab('cupones', $$('.admin-tab')[2])">
+            ${c.active ? '🔴 Desactivar' : '🟢 Activar'}
+          </button>
+          <button onclick="DataLayer.coupons.delete('${code}'); Admin.showTab('cupones', $$('.admin-tab')[2])">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="admin-section-title">Cupones</div>
+      <div class="admin-coupon-form">
+        <input class="admin-input" id="new-coupon-code" placeholder="Código (ej: VERANO20)" style="text-transform:uppercase" />
+        <input class="admin-input" id="new-coupon-label" placeholder="Descripción" />
+        <div class="admin-row-2">
+          <select class="admin-input" id="new-coupon-type" onchange="Admin._couponTypeChange()">
+            <option value="percent">% Descuento</option>
+            <option value="fixed">$ Descuento fijo</option>
+            <option value="free_delivery">🚚 Envío gratis</option>
+          </select>
+          <input class="admin-input" id="new-coupon-value" type="number" placeholder="Valor" />
+        </div>
+        <div class="admin-row-2">
+          <input class="admin-input" id="new-coupon-min" type="number" placeholder="Compra mín. (0 = sin mín)" />
+          <input class="admin-input" id="new-coupon-max" type="number" placeholder="Usos máx. (0 = ∞)" />
+        </div>
+        <button class="admin-save-btn" onclick="Admin.createCoupon()" style="background:var(--primary);margin-top:8px">
+          <i class="fa-solid fa-plus"></i> Crear cupón
+        </button>
+      </div>
+      <div class="admin-coupons-list">${rows}</div>`;
+  },
+
+  _couponTypeChange() {
+    const type = $('#new-coupon-type')?.value;
+    const valInput = $('#new-coupon-value');
+    if (valInput) {
+      valInput.placeholder = type === 'percent' ? 'Ej: 20' : type === 'fixed' ? 'Ej: 2000' : '—';
+      if (type === 'free_delivery') valInput.value = '0';
+    }
+  },
+
+  createCoupon() {
+    const code = $('#new-coupon-code')?.value?.trim();
+    const label = $('#new-coupon-label')?.value?.trim();
+    const type = $('#new-coupon-type')?.value;
+    const discount = parseInt($('#new-coupon-value')?.value) || 0;
+    const minPurchase = parseInt($('#new-coupon-min')?.value) || 0;
+    const maxUses = parseInt($('#new-coupon-max')?.value) || 999;
+
+    if (!code) { showToast('Ingresa un código', '⚠️'); return; }
+
+    DataLayer.coupons.create(code, { discount, type, minPurchase, maxUses, label });
+    showToast('Cupón creado ✓', '✅');
+    Admin.showTab('cupones', $$('.admin-tab')[2]);
   },
 
   editProduct(id) {
@@ -1283,44 +1609,45 @@ const Admin = {
       </div>`;
   },
 
-  saveProduct(id) {
+  async saveProduct(id) {
     const prods = JSON.parse(JSON.stringify(getProducts()));
     const idx = prods.findIndex(p => p.id === id);
     if (idx < 0) return;
     prods[idx] = {
       ...prods[idx],
-      emoji: $('#ep-emoji')?.value || prods[idx].emoji,
-      name: $('#ep-name')?.value || prods[idx].name,
-      desc: $('#ep-desc')?.value || prods[idx].desc,
+      emoji: DataLayer._sanitize($('#ep-emoji')?.value) || prods[idx].emoji,
+      name: DataLayer._sanitize($('#ep-name')?.value) || prods[idx].name,
+      desc: DataLayer._sanitize($('#ep-desc')?.value) || prods[idx].desc,
       priceUnit: parseInt($('#ep-priceUnit')?.value) || prods[idx].priceUnit,
       pricePack4: parseInt($('#ep-pricePack4')?.value) || prods[idx].pricePack4,
       pricePack8: parseInt($('#ep-pricePack8')?.value) || prods[idx].pricePack8,
       category: $('#ep-category')?.value || prods[idx].category,
-      badge: $('#ep-badge')?.value || null,
+      badge: DataLayer._sanitize($('#ep-badge')?.value) || null,
     };
-    AdminState.set('products', prods);
+
+    DataLayer.products.update(id, prods[idx]);
+    AdminState._d.products = prods;
     showToast('Producto guardado ✓', '✅');
     Admin.showTab('productos', $$('.admin-tab')[0]);
   },
 
   deleteProduct(id) {
     if (!confirm('¿Eliminar este producto?')) return;
-    const prods = getProducts().filter(p => p.id !== id);
-    AdminState.set('products', prods);
+    DataLayer.products.delete(id);
+    AdminState._d.products = AdminState._d.products.filter(p => p.id !== id);
     showToast('Producto eliminado', '🗑️');
     Admin.showTab('productos', $$('.admin-tab')[0]);
   },
 
   addProduct() {
     const newId = 'prod-' + Date.now();
-    const prods = JSON.parse(JSON.stringify(getProducts()));
-    prods.push({
+    DataLayer.products.create({
       id: newId, name: 'Nuevo Producto', category: 'barras',
       emoji: '🌿', desc: 'Descripción del producto.',
       priceUnit: 1500, pricePack4: 5400, pricePack8: 10000,
       badge: null, badgeStyle: '', tags: [], attrs: [],
     });
-    AdminState.set('products', prods);
+    AdminState._d.products = DataLayer.products.getActive();
     Admin.editProduct(newId);
   },
 
@@ -1421,6 +1748,7 @@ const App = {
       carrito:      Views.carrito,
       checkout:     Views.checkout,
       encargos:     Views.encargos,
+      pedidos:      Views.pedidos,
       confirmacion: Views.confirmacion,
     };
 
@@ -1522,6 +1850,42 @@ const App = {
     document.body.style.overflow = '';
   },
 
+  skipOnboarding() {
+    DataLayer.onboarding.markDone();
+    const overlay = $('#onboarding-overlay');
+    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 300); }
+  },
+
+  startOnboarding() {
+    DataLayer.onboarding.markDone();
+    State.appliedCoupon = DataLayer.coupons.validate('BIENVENIDO10');
+    const overlay = $('#onboarding-overlay');
+    if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 300); }
+    showToast('Cupón IG15 aplicado: 15% OFF', '🎉');
+  },
+
+  shareProduct(id, btn) {
+    const p = DataLayer.products.getById(id);
+    if (!p) return;
+    const text = `Mirá ${p.name} de @circulodesabores_cl 🌿`;
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: p.name, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => showToast('Link copiado ✓', '📋'));
+    }
+    if (navigator.vibrate) navigator.vibrate(15);
+  },
+
+  shareToInstagram() {
+    const text = 'Acabo de pedir en @circulodesabores_cl 🌿 ¡Barras y snacks artesanales increíbles!';
+    if (navigator.share) {
+      navigator.share({ text, url: 'https://instagram.com/circulodesabores_cl' }).catch(() => {});
+    } else {
+      window.open('https://instagram.com/circulodesabores_cl', '_blank');
+    }
+  },
+
   /* ── LOGO SECRET ADMIN ──────────────────── */
   _logoClick() {
     App._logoClickCount++;
@@ -1535,6 +1899,21 @@ const App = {
   },
 
   /* ── PRODUCT ACTIONS ─────────────────────── */
+  toggleFav(id, btn) {
+    const favs = DataLayer.favorites.toggle(id);
+    const isActive = favs.includes(id);
+    if (btn) {
+      btn.classList.toggle('active', isActive);
+      const icon = btn.querySelector('i');
+      if (icon) {
+        icon.className = isActive ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+      }
+      btn.style.transform = 'scale(1.3)';
+      setTimeout(() => { btn.style.transform = ''; }, 200);
+    }
+    if (navigator.vibrate) navigator.vibrate(15);
+  },
+
   openProduct(id, preType) {
     State.selectedProduct = getProducts().find(p => p.id === id);
     State.selectedType = preType || 'unit';
@@ -1554,11 +1933,9 @@ const App = {
     const info = getPackInfo(p, State.selectedType);
     const total = info.price * State.selectedQty;
     const qtyEl   = $('#qty-val');
-    const totalEl = $('#detail-total');
     if (qtyEl)   qtyEl.textContent = State.selectedQty;
-    if (totalEl) totalEl.textContent = fmt(total);
     const addBtn = $('.btn-add-full');
-    if (addBtn)  addBtn.innerHTML = `<i class="fa-solid fa-bag-shopping"></i> Agregar al carrito · ${fmt(total)}`;
+    if (addBtn)  addBtn.innerHTML = `<i class="fa-solid fa-bag-shopping"></i> Agregar al carrito — ${fmt(total)}`;
   },
 
   addToCart() {
@@ -1577,40 +1954,180 @@ const App = {
     App.navigate('home');
   },
 
+  applyCoupon() {
+    const input = $('#coupon-input');
+    const msg = $('#coupon-msg');
+    if (!input || !msg) return;
+    const code = input.value.trim();
+    if (!code) { msg.innerHTML = '<span class="coupon-error">Ingresa un código</span>'; return; }
+
+    const coupon = DataLayer.coupons.validate(code);
+    if (!coupon) {
+      msg.innerHTML = '<span class="coupon-error">Cupón no encontrado</span>';
+      return;
+    }
+    if (coupon.error) {
+      msg.innerHTML = `<span class="coupon-error">${coupon.error}</span>`;
+      return;
+    }
+
+    const subtotal = cartTotal();
+    if (coupon.minPurchase && subtotal < coupon.minPurchase) {
+      msg.innerHTML = `<span class="coupon-error">Mínimo ${fmt(coupon.minPurchase)} para este cupón</span>`;
+      return;
+    }
+
+    State.appliedCoupon = { code: code.toUpperCase(), ...coupon };
+    App.navigate('checkout');
+    showToast(`Cupón aplicado: ${coupon.label}`, '🎉');
+  },
+
+  removeCoupon() {
+    State.appliedCoupon = null;
+    App.navigate('checkout');
+  },
+
+  _calcDiscount(subtotal, coupon) {
+    if (!coupon) return 0;
+    if (coupon.type === 'percent') return Math.round(subtotal * (coupon.discount / 100));
+    if (coupon.type === 'fixed') return Math.min(coupon.discount, subtotal);
+    return 0;
+  },
+
   /* ── SEARCH & FILTER ─────────────────────── */
   onSearch(val) {
     State.searchQuery = val;
     const clearBtn = $('#search-clear');
     if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
-    App._refreshHome();
+    this._renderProductsGrid();
+    this._renderSectionLabel();
+    this._renderOptionalSections();
   },
 
   clearSearch() {
     State.searchQuery = '';
-    App.navigate('home');
+    const inp = $('#search-input');
+    if (inp) inp.value = '';
+    const clearBtn = $('#search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    this._renderProductsGrid();
+    this._renderSectionLabel();
+    this._renderOptionalSections();
   },
 
   setCategory(cat) {
     State.activeCategory = cat;
-    App.navigate('home');
+    this._renderCatFilters();
+    this._renderProductsGrid();
+    this._renderSectionLabel();
+    this._renderOptionalSections();
   },
 
   toggleTag(tag) {
     State.activeTag = State.activeTag === tag ? null : tag;
-    App.navigate('home');
+    this._renderTagFilters();
+    this._renderProductsGrid();
+    this._renderSectionLabel();
+    this._renderOptionalSections();
   },
 
   clearFilters() {
     State.searchQuery = '';
     State.activeCategory = 'todos';
     State.activeTag = null;
-    App.navigate('home');
+    this._renderCatFilters();
+    this._renderTagFilters();
+    this._renderProductsGrid();
+    this._renderSectionLabel();
+    this._renderOptionalSections();
+    const inp = $('#search-input');
+    if (inp) inp.value = '';
+    const clearBtn = $('#search-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+  },
+
+  _getFilteredProducts() {
+    const products = getProducts();
+    return products.filter(p => {
+      const matchCat = State.activeCategory === 'todos' || p.category === State.activeCategory;
+      const matchTag = !State.activeTag || (p.tags && p.tags.includes(State.activeTag));
+      const matchSearch = !State.searchQuery ||
+        p.name.toLowerCase().includes(State.searchQuery.toLowerCase()) ||
+        p.desc.toLowerCase().includes(State.searchQuery.toLowerCase());
+      return matchCat && matchTag && matchSearch;
+    });
+  },
+
+  _renderCatFilters() {
+    const el = $('#cat-filters');
+    if (!el) return;
+    const catCols = CATEGORIES.slice(1);
+    el.innerHTML = `
+      <button class="filter-btn ${State.activeCategory === 'todos' ? 'active' : ''}"
+              onclick="App.setCategory('todos')">Todos</button>
+      ${catCols.map(c => {
+        const meta = CATEGORY_META[c];
+        return `<button class="filter-btn ${State.activeCategory === c ? 'active' : ''}"
+                        onclick="App.setCategory('${c}')">
+          <span class="filter-emoji">${meta.emoji}</span> ${meta.label}
+        </button>`;
+      }).join('')}`;
+  },
+
+  _renderTagFilters() {
+    const el = $('#tag-filters-wrap');
+    if (!el) return;
+    el.innerHTML = Object.entries(TAGS).map(([key, tag]) =>
+      `<button class="tag-filter-btn ${State.activeTag === key ? 'active' : ''}"
+               data-tag="${key}"
+               onclick="App.toggleTag('${key}')"
+               style="--tag-color:${tag.color}">
+        ${tag.icon} ${tag.label}
+       </button>`
+    ).join('');
+  },
+
+  _renderProductsGrid() {
+    const el = $('#products-grid');
+    if (!el) return;
+    const filtered = this._getFilteredProducts();
+    const cards = filtered.length > 0
+      ? filtered.map(p => Views._productCard(p)).join('')
+      : `<div class="no-results">
+           <i class="fa-solid fa-magnifying-glass"></i>
+           <p>Sin resultados${State.searchQuery ? ` para "<strong>${State.searchQuery}</strong>"` : ' para este filtro'}</p>
+           <button class="btn-ghost" onclick="App.clearFilters()">Limpiar filtros</button>
+         </div>`;
+    el.innerHTML = cards;
+  },
+
+  _renderSectionLabel() {
+    const el = $('#section-label-row');
+    if (!el) return;
+    const filtered = this._getFilteredProducts();
+    const label = State.activeCategory !== 'todos'
+      ? CATEGORY_META[State.activeCategory]?.label || 'Catálogo'
+      : 'Catálogo';
+    el.querySelector('.section-label').textContent = label;
+    const countEl = el.querySelector('.section-count');
+    if (countEl) countEl.textContent = `${filtered.length} producto${filtered.length !== 1 ? 's' : ''}`;
+  },
+
+  _renderOptionalSections() {
+    const show = State.activeCategory === 'todos';
+    const customWrap = $('#custom-section-wrap');
+    const packsWrap = $('#packs-section-wrap');
+    const testWrap = $('#testimonials-wrap');
+    const faqWrap = $('#faq-wrap');
+    if (customWrap) customWrap.innerHTML = show ? Views._customSection() : '';
+    if (packsWrap) packsWrap.innerHTML = show ? Views._packSection() : '';
+    if (testWrap) testWrap.innerHTML = show ? Views._testimonialsSection() : '';
+    if (faqWrap) faqWrap.innerHTML = show ? Views._faqSection() : '';
   },
 
   _refreshHome() {
-    App.navigate('home');
     const inp = $('#search-input');
-    if (inp) { inp.value = State.searchQuery; inp.focus(); inp.setSelectionRange(9999, 9999); }
+    if (inp) { inp.value = State.searchQuery; }
   },
 
   /* ── CART ACTIONS ────────────────────────── */
@@ -1671,6 +2188,11 @@ const App = {
     const fecha     = now.toLocaleDateString('es-CL');
     const hora      = now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
+    const subtotal  = cartTotal();
+    const coupon    = State.appliedCoupon || null;
+    const discount  = coupon ? this._calcDiscount(subtotal, coupon) : 0;
+    const finalTotal = subtotal - discount;
+
     const itemLines = State.cart.map(i =>
       `  ${i.emoji} *${i.name}* — ${i.typeLabel} ×${i.qty}: ${fmt(i.priceTotal)}`
     ).join('\n');
@@ -1683,15 +2205,51 @@ const App = {
       `📦 *Entrega:* ${metodo === 'delivery' ? `Delivery → ${dirVal}` : '🏪 Retiro en tienda'}\n` +
       `─────────────────────\n` +
       `🛒 *Detalle:*\n${itemLines}\n` +
+      (discount > 0 ? `─────────────────────\n💸 *Descuento:* -${fmt(discount)} (${coupon.code})\n` : '') +
       `─────────────────────\n` +
-      `💰 *Total: ${fmt(cartTotal())}*\n` +
+      `💰 *Total: ${fmt(finalTotal)}*\n` +
       (notasVal ? `\n📝 *Notas:* ${notasVal}\n` : '') +
       `\n_Enviado desde la tienda web_`
     );
 
+    // Save order via DataLayer
+    DataLayer.orders.create({
+      customerName: DataLayer._sanitize(nombreVal),
+      customerPhone: WHATSAPP_NUMBER,
+      items: State.cart.map(i => ({
+        id: i.id, name: i.name, emoji: i.emoji,
+        type: i.type, typeLabel: i.typeLabel,
+        qty: i.qty, priceTotal: i.priceTotal
+      })),
+      total: finalTotal,
+      subtotal: subtotal,
+      couponCode: coupon ? coupon.code : null,
+      couponDiscount: discount,
+      deliveryMethod: metodo,
+      address: metodo === 'delivery' ? DataLayer._sanitize(dirVal) : null,
+      notes: notasVal ? DataLayer._sanitize(notasVal) : null,
+      paymentMethod: 'transferencia'
+    });
+
+    // Mark coupon as used
+    if (coupon) DataLayer.coupons.use(coupon.code);
+
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
     Cart.clear();
+    State.appliedCoupon = null;
     App.navigate('confirmacion');
+  },
+
+  reorder(orderId) {
+    const order = DataLayer.orders.getById(orderId);
+    if (!order) return;
+    State.cart = [];
+    (order.items || []).forEach(item => {
+      const product = DataLayer.products.getById(item.id);
+      if (product) Cart.add(product, item.type, item.qty);
+    });
+    showToast('Pedido repetido ✓', '🔄');
+    App.navigate('carrito');
   },
 
   /* ── ENCARGOS ────────────────────────────── */
@@ -1745,10 +2303,16 @@ const App = {
 
   /* ── INIT ────────────────────────────────── */
   init() {
+    DataLayer.init();
     AdminState.load();
     const dm = AdminState.get('deliveryMethods');
     if (!dm.delivery && dm.retiro) State.checkoutMethod = 'retiro';
     else if (dm.delivery) State.checkoutMethod = 'delivery';
+
+    // Load cart from DataLayer
+    const savedCart = DataLayer.cart.load();
+    if (savedCart.length > 0) State.cart = savedCart;
+
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       App._pwaPrompt = e;
@@ -1757,6 +2321,14 @@ const App = {
     });
     App.navigate('intro');
     Cart.refreshBadge();
+
+    // Show onboarding after intro animation completes
+    setTimeout(() => {
+      if (!DataLayer.onboarding.isDone()) {
+        const app = $('#app');
+        if (app) app.insertAdjacentHTML('beforeend', Views.onboarding());
+      }
+    }, 500);
   },
 };
 
