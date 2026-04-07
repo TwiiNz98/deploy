@@ -8,131 +8,517 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Círculo de Sabores" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Compra por unidad o en packs con descuento." />
+  <meta name="description" content="Círculo de Sabores — Barras saludables artesanales. Personaliza tus snacks con ingredientes a tu elección." />
   <title>Círculo de Sabores</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* ── ZERO-SCROLL BODY ────────────────────────────────── */
+    html, body {
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ── LANDING WRAPPER (fills between navbar & footer) ── */
+    .landing-wrap {
+      position: fixed;
+      top: var(--navbar-h);
+      bottom: var(--footer-h);
+      left: 0; right: 0;
+      overflow: hidden;
+    }
+
+    /* ── HERO ────────────────────────────────────────────── */
+    .hero-landing {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Background image + warm gradient fallback */
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-image: url('images/hero/1.jpg');
+      background-size: cover;
+      background-position: center 40%;
+      /* Warm earthy fallback when image is missing */
+      background-color: #3B1E0A;
+    }
+    /* Pseudo-element provides the dark overlay for text legibility */
+    .hero-bg::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        168deg,
+        rgba(22, 9, 3, 0.62) 0%,
+        rgba(42, 20, 8, 0.50) 45%,
+        rgba(18, 7, 2, 0.72) 100%
+      );
+    }
+    /* Subtle vignette at the edges */
+    .hero-bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(
+        ellipse 120% 100% at 50% 50%,
+        transparent 55%,
+        rgba(10, 4, 1, 0.45) 100%
+      );
+    }
+
+    /* ── HERO CONTENT ────────────────────────────────────── */
+    .hero-content {
+      position: relative; z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 28px;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* ── BADGE ───────────────────────────────────────────── */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      border-radius: 100px;
+      margin-bottom: 22px;
+      animation: landingFadeUp .55s cubic-bezier(.4, 0, .2, 1) .05s both;
+    }
+    .hero-badge i {
+      color: #86efac;
+      font-size: .72rem;
+    }
+
+    /* ── TITLE ───────────────────────────────────────────── */
+    .hero-title-land {
+      font-family: var(--font-display);
+      font-size: clamp(2.05rem, 8.5vw, 2.85rem);
+      line-height: 1.13;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 24px;
+      text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+      animation: landingFadeUp .55s cubic-bezier(.4, 0, .2, 1) .15s both;
+    }
+
+    /* ── BENEFITS ────────────────────────────────────────── */
+    .hero-benefits {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 11px;
+      margin-bottom: 30px;
+      animation: landingFadeUp .55s cubic-bezier(.4, 0, .2, 1) .25s both;
+    }
+    .benefit-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: .9rem;
+      color: rgba(255, 255, 255, 0.93);
+      font-weight: 400;
+    }
+    .benefit-icon {
+      width: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: .85rem;
+    }
+    .benefit-icon.check  { color: #86efac; }
+    .benefit-icon.truck  { color: #6ee7b7; }
+
+    /* ── CTA BUTTONS ─────────────────────────────────────── */
+    .hero-ctas {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      width: 100%;
+      animation: landingFadeUp .55s cubic-bezier(.4, 0, .2, 1) .35s both;
+    }
+
+    /* Primary: cream/light background */
+    .btn-personaliza {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 24px;
+      background: #FFF8F2;
+      color: var(--primary);
+      font-family: var(--font-body);
+      font-size: .95rem;
+      font-weight: 700;
+      border-radius: var(--r-xl);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+      text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-personaliza i {
+      color: var(--accent);
+      font-size: 1rem;
+    }
+    .btn-personaliza:active {
+      transform: scale(.97);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Secondary: solid coffee background */
+    .btn-catalogo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: .9rem;
+      font-weight: 600;
+      border-radius: var(--r-xl);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(107, 62, 46, 0.45);
+      transition: transform .15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-catalogo:active { transform: scale(.97); }
+    .btn-catalogo i { font-size: .85rem; }
+
+    /* ── ANIMATIONS ──────────────────────────────────────── */
+    @keyframes landingFadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── NAVBAR (standalone) ─────────────────────────────── */
+    .nav-landing {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--navbar-h);
+      background: rgba(245, 233, 218, 0.93);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+    /* Center the brand text absolutely */
+    .nav-landing-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .nav-landing-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    /* ── FOOTER NAV (standalone, matches catalogo.html) ──── */
+    .page-footer-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--footer-h);
+      background: rgba(245, 233, 218, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .page-foot-btn {
+      flex: 1; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: var(--text-3);
+      font-size: .68rem;
+      font-weight: 500;
+      letter-spacing: .02em;
+      position: relative;
+      text-decoration: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .page-foot-btn i { font-size: 1.15rem; }
+    .page-foot-btn.active { color: var(--primary); }
+    .page-foot-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      min-width: 16px; height: 16px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      font-size: .6rem; font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 3px;
+    }
+    .page-foot-badge.hidden { display: none; }
+
+    /* ── HAM NAV ITEMS as links ──────────────────────────── */
+    a.ham-nav-item {
+      text-decoration: none;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      text-align: left;
+      color: var(--text);
+      font-size: .95rem;
+      font-weight: 500;
+      transition: background .15s;
+    }
+    a.ham-nav-item i:first-child { color: var(--accent); font-size: 1rem; width: 20px; }
+    a.ham-nav-item span { flex: 1; }
+    a.ham-nav-item:active { background: var(--bg); }
+  </style>
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav id="navbar" class="navbar" style="display:none">
-    <button class="nav-logo-btn" id="nav-logo-btn" onclick="App._logoClick()">
-      <span class="nav-brand-text">Círculo de Sabores</span>
+  <!-- ── NAVBAR ─────────────────────────────────────────── -->
+  <nav class="nav-landing" aria-label="Navegación principal">
+    <!-- Left: Hamburger -->
+    <button class="nav-btn ham-btn" onclick="openMenu()" title="Menú" aria-label="Abrir menú">
+      <i class="fa-solid fa-bars"></i>
     </button>
-    <div class="nav-actions">
-      <div id="cart-badge-nav" class="cart-badge-nav hidden">0</div>
-      <button class="nav-btn ham-btn" id="ham-btn" onclick="App.toggleMenu()" title="Menú">
-        <i class="fa-solid fa-bars"></i>
-      </button>
+
+    <!-- Center: Brand -->
+    <div class="nav-landing-center">
+      <span class="nav-brand-text">Círculo de Sabores</span>
+    </div>
+
+    <!-- Right: Cart -->
+    <div class="nav-landing-right">
+      <div id="cart-badge-nav" class="cart-badge-nav hidden" aria-hidden="true">0</div>
+      <a href="catalogo.html" class="nav-btn" aria-label="Ir al catálogo / carrito" style="text-decoration:none">
+        <i class="fa-solid fa-bag-shopping"></i>
+      </a>
     </div>
   </nav>
 
-  <!-- HAMBURGER OVERLAY -->
-  <div class="ham-overlay" id="ham-overlay" onclick="App.closeMenu()"></div>
+  <!-- ── HAMBURGER OVERLAY ───────────────────────────────── -->
+  <div class="ham-overlay" id="ham-overlay" onclick="closeMenu()" aria-hidden="true"></div>
 
-  <!-- HAMBURGER MENU PANEL -->
-  <div class="ham-menu" id="ham-menu">
+  <!-- ── HAMBURGER MENU PANEL ───────────────────────────── -->
+  <div class="ham-menu" id="ham-menu" role="dialog" aria-modal="true" aria-label="Menú de navegación">
     <div class="ham-menu-header">
       <span class="ham-menu-logo">🌿 Círculo de Sabores</span>
-      <button class="ham-close-btn" onclick="App.closeMenu()">
+      <button class="ham-close-btn" onclick="closeMenu()" aria-label="Cerrar menú">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
-    <nav class="ham-nav-links">
-      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('home')">
+    <nav class="ham-nav-links" aria-label="Menú">
+      <a class="ham-nav-item" href="catalogo.html">
         <i class="fa-solid fa-store"></i>
         <span>Ver Productos</span>
         <i class="fa-solid fa-chevron-right ham-arrow"></i>
-      </button>
-      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('pedidos')">
-        <i class="fa-solid fa-clipboard-list"></i>
-        <span>Mis Pedidos</span>
-        <i class="fa-solid fa-chevron-right ham-arrow"></i>
-      </button>
-      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('encargos')">
+      </a>
+      <a class="ham-nav-item" href="personalizados.html">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
         <span>Realizar Encargos</span>
         <i class="fa-solid fa-chevron-right ham-arrow"></i>
-      </button>
-      <button class="ham-nav-item" onclick="App.closeMenu(); App.navigate('carrito')">
+      </a>
+      <a class="ham-nav-item" href="catalogo.html">
         <i class="fa-solid fa-bag-shopping"></i>
         <span>Mi Carrito</span>
         <i class="fa-solid fa-chevron-right ham-arrow"></i>
-      </button>
+      </a>
     </nav>
     <div class="ham-divider"></div>
     <div class="ham-social">
-      <a href="https://instagram.com/circulodesabores_cl" target="_blank" rel="noopener" class="ham-social-btn ham-ig">
+      <a href="https://instagram.com/circulodesabores_cl"
+         target="_blank" rel="noopener"
+         class="ham-social-btn ham-ig"
+         aria-label="Instagram">
         <i class="fa-brands fa-instagram"></i>
       </a>
-      <a href="https://wa.me/56950147783" target="_blank" rel="noopener" class="ham-social-btn ham-wa">
+      <a href="https://wa.me/56950147783"
+         target="_blank" rel="noopener"
+         class="ham-social-btn ham-wa"
+         aria-label="WhatsApp">
         <i class="fa-brands fa-whatsapp"></i>
       </a>
     </div>
-    <div class="ham-pwa-wrap" id="ham-pwa-wrap" style="display:none">
-      <button class="ham-pwa-btn" onclick="App.installPWA()">
-        <i class="fa-solid fa-download"></i>
-        <span>Instalar App</span>
-      </button>
-    </div>
   </div>
 
-  <!-- APP CONTAINER -->
-  <main id="app" class="app-container"></main>
+  <!-- ── LANDING CONTENT ────────────────────────────────── -->
+  <div class="landing-wrap">
+    <section class="hero-landing" aria-label="Bienvenida">
 
-  <!-- FOOTER NAV -->
-  <footer id="footer-nav" class="footer-nav" style="display:none">
-    <button class="foot-btn" onclick="App.navigate('home')" data-view="home">
-      <i class="fa-solid fa-house"></i>
+      <!-- Full-screen background image -->
+      <div class="hero-bg" role="img" aria-label="Granola artesanal"></div>
+
+      <!-- Centered content -->
+      <div class="hero-content">
+
+        <!-- Badge pill -->
+        <div class="hero-badge" role="note">
+          <i class="fa-solid fa-leaf" aria-hidden="true"></i>
+          100% Artesanal · Sin conservantes
+        </div>
+
+        <!-- Main title -->
+        <h1 class="hero-title-land">
+          Personaliza tus<br>snacks favoritos
+        </h1>
+
+        <!-- Benefits list -->
+        <ul class="hero-benefits" aria-label="Beneficios">
+          <li class="benefit-row">
+            <span class="benefit-icon check" aria-hidden="true">
+              <i class="fa-solid fa-circle-check"></i>
+            </span>
+            <span>Ingredientes a tu elección</span>
+          </li>
+          <li class="benefit-row">
+            <span class="benefit-icon check" aria-hidden="true">
+              <i class="fa-solid fa-circle-check"></i>
+            </span>
+            <span>Sin azúcar añadida</span>
+          </li>
+          <li class="benefit-row">
+            <span class="benefit-icon truck" aria-hidden="true">
+              <i class="fa-solid fa-truck"></i>
+            </span>
+            <span>Delivery gratis desde <strong>$20.000</strong></span>
+          </li>
+        </ul>
+
+        <!-- Call to action buttons -->
+        <div class="hero-ctas">
+          <!-- Primary: personalizar -->
+          <a class="btn-personaliza" href="personalizados.html">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+            Personaliza
+          </a>
+
+          <!-- Secondary: ver catálogo -->
+          <a class="btn-catalogo" href="catalogo.html">
+            Ver Catálogo Completo
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
+
+      </div><!-- /.hero-content -->
+    </section>
+  </div><!-- /.landing-wrap -->
+
+  <!-- ── FOOTER NAV ─────────────────────────────────────── -->
+  <footer class="page-footer-nav" aria-label="Navegación inferior">
+    <a href="index.html" class="page-foot-btn active" aria-current="page">
+      <i class="fa-solid fa-house" aria-hidden="true"></i>
       <span>Inicio</span>
-    </button>
-    <button class="foot-btn" onclick="App.navigate('encargos')" data-view="encargos">
-      <i class="fa-solid fa-wand-magic-sparkles"></i>
-      <span>Encargos</span>
-    </button>
-    <button class="foot-btn cart-foot-btn" onclick="App.navigate('carrito')" data-view="carrito">
-      <i class="fa-solid fa-bag-shopping"></i>
+    </a>
+    <a href="catalogo.html" class="page-foot-btn">
+      <i class="fa-solid fa-store" aria-hidden="true"></i>
+      <span>Catálogo</span>
+    </a>
+    <a href="personalizados.html" class="page-foot-btn">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      <span>Personaliza</span>
+    </a>
+    <a href="catalogo.html" class="page-foot-btn" id="foot-cart-btn">
+      <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
       <span>Carrito</span>
-      <span id="foot-cart-count" class="foot-cart-count hidden">0</span>
-    </button>
+      <span class="page-foot-badge hidden" id="foot-cart-count" aria-label="Items en carrito">0</span>
+    </a>
   </footer>
 
-  <!-- ADMIN PANEL OVERLAY -->
-  <div class="admin-panel" id="admin-panel" style="display:none">
-    <div class="admin-header">
-      <button class="admin-back-btn" onclick="Admin.close()">
-        <i class="fa-solid fa-chevron-left"></i> Salir
-      </button>
-      <h2 class="admin-title">⚙️ Panel Admin</h2>
-      <div></div>
-    </div>
-    <div class="admin-tabs-bar" id="admin-tabs-bar">
-      <button class="admin-tab active" onclick="Admin.showTab('productos', this)">
-        <i class="fa-solid fa-box-open"></i> Productos
-      </button>
-      <button class="admin-tab" onclick="Admin.showTab('pedidos', this)">
-        <i class="fa-solid fa-clipboard-list"></i> Pedidos
-      </button>
-      <button class="admin-tab" onclick="Admin.showTab('cupones', this)">
-        <i class="fa-solid fa-ticket"></i> Cupones
-      </button>
-      <button class="admin-tab" onclick="Admin.showTab('entrega', this)">
-        <i class="fa-solid fa-truck"></i> Entrega
-      </button>
-      <button class="admin-tab" onclick="Admin.showTab('contenido', this)">
-        <i class="fa-solid fa-pen-to-square"></i> Contenido
-      </button>
-    </div>
-    <div class="admin-body" id="admin-body">
-      <!-- Populated by Admin.showTab() -->
-    </div>
-  </div>
-
+  <!-- ── SCRIPTS ─────────────────────────────────────────── -->
   <script src="data-layer.js"></script>
-  <script src="app.js"></script>
+  <script>
+    'use strict';
+
+    /* ── HAMBURGER MENU ─────────────────────────────── */
+    function openMenu() {
+      document.getElementById('ham-menu').classList.add('open');
+      document.getElementById('ham-overlay').classList.add('open');
+      document.getElementById('ham-menu').focus();
+    }
+
+    function closeMenu() {
+      document.getElementById('ham-menu').classList.remove('open');
+      document.getElementById('ham-overlay').classList.remove('open');
+    }
+
+    /* Close on Escape key */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    /* ── CART BADGE ─────────────────────────────────── */
+    function refreshBadge() {
+      try {
+        const cart = DataLayer.cart.load();
+        const count = cart.reduce(function(s, i) { return s + i.qty; }, 0);
+        const navBadge  = document.getElementById('cart-badge-nav');
+        const footBadge = document.getElementById('foot-cart-count');
+        if (navBadge) {
+          navBadge.textContent = count;
+          navBadge.classList.toggle('hidden', count === 0);
+        }
+        if (footBadge) {
+          footBadge.textContent = count;
+          footBadge.classList.toggle('hidden', count === 0);
+        }
+      } catch (e) { /* DataLayer not ready */ }
+    }
+
+    /* ── INIT ────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      try { DataLayer.init(); } catch (e) {}
+      refreshBadge();
+    });
+
+    /* ── SERVICE WORKER ──────────────────────────────── */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').catch(function() {});
+      });
+    }
+  </script>
 </body>
 </html>

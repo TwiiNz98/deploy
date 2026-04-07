@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#F5E9DA" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Pedidos Personalizados — Círculo de Sabores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { overflow: auto !important; height: auto !important; }
+
+    .page-scroll {
+      padding-top: var(--navbar-h);
+      padding-bottom: calc(var(--footer-h) + 20px);
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .nav-back-btn {
+      width:36px; height:36px; border-radius:50%;
+      background:var(--surface); border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      color:var(--primary); font-size:.88rem;
+      box-shadow:var(--shadow-s); text-decoration:none;
+    }
+
+    /* ── HERO ── */
+    .pers-hero {
+      background: linear-gradient(150deg, var(--primary) 0%, #3D1F0F 100%);
+      padding: 28px 20px 26px;
+      text-align: center; color: #fff; position: relative; overflow: hidden;
+    }
+    .pers-hero::before {
+      content:''; position:absolute; top:-40px; right:-40px;
+      width:160px; height:160px;
+      background:radial-gradient(circle,rgba(196,119,65,.25) 0%,transparent 70%);
+      border-radius:50%; pointer-events:none;
+    }
+    .pers-hero-icon { font-size:2.4rem; margin-bottom:12px; display:block; animation:levitate 2.8s ease-in-out infinite; }
+    @keyframes levitate { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .pers-hero-title { font-family:var(--font-display); font-size:1.75rem; margin-bottom:8px; line-height:1.2; }
+    .pers-hero-sub { font-size:.88rem; opacity:.82; line-height:1.55; max-width:280px; margin:0 auto; }
+
+    /* ── CONDICIONES ── */
+    .conditions-section { padding: 20px 16px 4px; }
+    .conditions-title { font-family:var(--font-display); font-size:1.15rem; color:var(--primary); margin-bottom:12px; }
+    .condition-cards { display:flex; flex-direction:column; gap:10px; }
+    .condition-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--r-m);
+      padding:14px 16px; display:flex; align-items:flex-start; gap:12px;
+      box-shadow:var(--shadow-s);
+    }
+    .condition-icon { font-size:1.4rem; flex-shrink:0; margin-top:1px; }
+    .condition-body .cond-title { font-weight:600; font-size:.92rem; color:var(--text); margin-bottom:3px; }
+    .condition-body .cond-sub { font-size:.8rem; color:var(--text-2); line-height:1.5; }
+
+    /* ── FORM SECTIONS ── */
+    .form-section { padding: 20px 16px 0; }
+    .form-section-label {
+      font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--text-3); margin-bottom:10px; display:flex; align-items:center; gap:8px;
+    }
+    .form-section-label .step-num {
+      width:20px; height:20px; border-radius:50%; background:var(--primary); color:#fff;
+      font-size:.65rem; font-weight:700; display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+
+    /* ── CHIP SELECTORS (single) ── */
+    .chip-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip-btn {
+      padding:10px 16px; border-radius:var(--r-xl);
+      border:1.5px solid var(--border); background:var(--surface);
+      font-size:.85rem; font-weight:500; color:var(--text-2);
+      transition:all .18s; cursor:pointer; display:flex; align-items:center; gap:7px;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .chip-btn.selected {
+      background:var(--primary); border-color:var(--primary);
+      color:#fff; box-shadow:0 4px 12px rgba(107,62,46,.28);
+    }
+    .chip-btn:active { transform:scale(.95); }
+
+    /* ── CHIP SELECTORS (multi) ── */
+    .chip-multi-btn {
+      padding:9px 14px; border-radius:var(--r-xl);
+      border:1.5px solid var(--border); background:var(--surface);
+      font-size:.82rem; font-weight:500; color:var(--text-2);
+      transition:all .18s; cursor:pointer; display:flex; align-items:center; gap:6px;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .chip-multi-btn.selected {
+      border-color:var(--accent); background:rgba(196,119,65,.1);
+      color:var(--primary);
+    }
+    .chip-multi-btn:active { transform:scale(.95); }
+
+    /* ── QUANTITY STEPPER ── */
+    .qty-presets { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .qty-preset-btn {
+      padding:10px 18px; border-radius:var(--r-xl);
+      border:1.5px solid var(--border); background:var(--surface);
+      font-size:.88rem; font-weight:600; color:var(--text-2);
+      transition:all .18s; cursor:pointer;
+    }
+    .qty-preset-btn.selected { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .qty-custom-row { display:flex; align-items:center; gap:10px; margin-top:4px; }
+    .qty-custom-label { font-size:.82rem; color:var(--text-3); white-space:nowrap; }
+    .qty-custom-input {
+      flex:1; background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--r-m); padding:11px 14px;
+      font-size:.95rem; color:var(--text); outline:none;
+      transition:border-color .2s; -webkit-appearance:none;
+    }
+    .qty-custom-input:focus { border-color:var(--primary); }
+
+    /* ── SABORES / INGREDIENTES ── */
+    .ingredient-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+
+    /* ── FIELD GROUPS ── */
+    .form-field { display:flex; flex-direction:column; gap:7px; }
+    .form-label {
+      font-size:.75rem; font-weight:700; color:var(--text-2);
+      text-transform:uppercase; letter-spacing:.07em;
+    }
+    .form-input {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--r-m); padding:14px 16px;
+      font-size:1rem; color:var(--text); outline:none;
+      transition:border-color .2s; width:100%; -webkit-appearance:none;
+    }
+    .form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(107,62,46,.08); }
+    textarea.form-input { resize:none; line-height:1.55; }
+    input[type="date"].form-input { color:var(--text); }
+
+    /* ── RESUMEN PREVIEW ── */
+    .order-preview {
+      margin: 20px 16px 0;
+      background: linear-gradient(135deg, #FFF8F2, #F5EBE0);
+      border: 1.5px solid var(--accent-l); border-radius: var(--r-m);
+      padding: 16px;
+    }
+    .order-preview-title { font-weight:700; font-size:.82rem; color:var(--text-2); letter-spacing:.06em; text-transform:uppercase; margin-bottom:10px; }
+    .preview-row { display:flex; align-items:baseline; gap:8px; font-size:.85rem; color:var(--text); margin-bottom:5px; }
+    .preview-row .pr-label { color:var(--text-3); flex-shrink:0; min-width:90px; }
+    .preview-row .pr-val { font-weight:500; }
+
+    /* ── WHATSAPP CTA ── */
+    .cta-section { padding: 20px 16px 0; }
+    .btn-whatsapp-lg {
+      width:100%; background:#25D366; color:#fff;
+      border-radius:var(--r-xl); padding:18px;
+      font-size:1.05rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center; gap:12px;
+      box-shadow:0 6px 20px rgba(37,211,102,.4);
+      transition:background .2s, transform .15s;
+    }
+    .btn-whatsapp-lg:active { background:#1aad54; transform:scale(.97); }
+    .btn-whatsapp-lg i { font-size:1.4rem; }
+    .cta-note { text-align:center; font-size:.78rem; color:var(--text-3); margin-top:10px; line-height:1.5; }
+
+    /* ── FOOTER NAV ── */
+    .page-footer-nav { position:fixed;bottom:0;left:0;right:0;height:var(--footer-h);background:rgba(245,233,218,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-around;border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom); }
+    .page-foot-btn { flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:.68rem;font-weight:500;letter-spacing:.02em;position:relative;text-decoration:none; }
+    .page-foot-btn i { font-size:1.15rem; }
+    .page-foot-btn.active { color:var(--primary); }
+    .page-foot-badge { position:absolute;top:8px;right:calc(50% - 18px);min-width:16px;height:16px;background:var(--primary);color:#fff;border-radius:8px;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px; }
+    .page-foot-badge.hidden { display:none; }
+
+    /* ── DIVIDER ── */
+    .form-divider { height:1px; background:var(--border); margin: 20px 16px 0; }
+
+    /* ── VALIDATION ── */
+    .form-error { font-size:.78rem; color:var(--error); display:none; margin-top:4px; }
+    .form-error.show { display:block; }
+    .form-input.error { border-color:var(--error); }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-back-btn" aria-label="Volver"><i class="fa-solid fa-chevron-left"></i></a>
+    <span class="nav-brand-text" style="font-family:var(--font-display);font-style:italic;color:var(--primary);font-size:1.05rem">Pedidos Personalizados</span>
+    <div class="nav-actions">
+      <div id="cart-badge-nav" class="cart-badge-nav hidden">0</div>
+      <a href="index.html" class="nav-btn" style="text-decoration:none" aria-label="Carrito"><i class="fa-solid fa-bag-shopping"></i></a>
+    </div>
+  </nav>
+
+  <div class="page-scroll">
+
+    <!-- HERO -->
+    <div class="pers-hero">
+      <span class="pers-hero-icon">🌿</span>
+      <h1 class="pers-hero-title">Diseña tu pedido</h1>
+      <p class="pers-hero-sub">Cuéntanos qué necesitas y lo elaboramos especialmente para ti. Ingredientes reales, sin límites creativos.</p>
+    </div>
+
+    <!-- CONDICIONES DEL SERVICIO -->
+    <div class="conditions-section">
+      <h2 class="conditions-title">¿Cómo funciona?</h2>
+      <div class="condition-cards">
+        <div class="condition-card">
+          <span class="condition-icon">📋</span>
+          <div class="condition-body">
+            <div class="cond-title">Evaluación previa sin compromiso</div>
+            <div class="cond-sub">Cada pedido es revisado antes de confirmar. Al no solicitar depósito por adelantado, verificamos que la producción sea viable para ambas partes. 🤝</div>
+          </div>
+        </div>
+        <div class="condition-card">
+          <span class="condition-icon">📦</span>
+          <div class="condition-body">
+            <div class="cond-title">Mínimo de producción</div>
+            <div class="cond-sub">La cantidad mínima para pedidos personalizados es de 6 unidades por sabor o variante. Para eventos, cotizamos desde 20 unidades.</div>
+          </div>
+        </div>
+        <div class="condition-card">
+          <span class="condition-icon">⏳</span>
+          <div class="condition-body">
+            <div class="cond-title">Tiempos de elaboración</div>
+            <div class="cond-sub">Pedidos estándar: 48–72 hrs de anticipación. Pedidos para evento: mínimo 5 días hábiles. Coordinaremos juntos via WhatsApp.</div>
+          </div>
+        </div>
+        <div class="condition-card">
+          <span class="condition-icon">🚫</span>
+          <div class="condition-body">
+            <div class="cond-title">Restricciones</div>
+            <div class="cond-sub">No producimos productos con alérgenos no declarados. Algunos ingredientes pueden no estar disponibles de forma permanente. Consultamos contigo antes de confirmar.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-divider"></div>
+
+    <!-- PASO 1: TIPO DE PRODUCTO -->
+    <div class="form-section">
+      <div class="form-section-label"><span class="step-num">1</span> Tipo de producto</div>
+      <div class="chip-grid" id="tipo-chips">
+        <button class="chip-btn" data-val="barras" onclick="PersForm.selectTipo(this)">🌾 Barras</button>
+        <button class="chip-btn" data-val="dulces" onclick="PersForm.selectTipo(this)">🍫 Dulces</button>
+        <button class="chip-btn" data-val="snacks" onclick="PersForm.selectTipo(this)">🥜 Snacks</button>
+        <button class="chip-btn" data-val="granolas" onclick="PersForm.selectTipo(this)">🥣 Granola</button>
+        <button class="chip-btn" data-val="mantequillas" onclick="PersForm.selectTipo(this)">🫙 Mantequillas</button>
+        <button class="chip-btn" data-val="mix" onclick="PersForm.selectTipo(this)">📦 Mix surtido</button>
+        <button class="chip-btn" data-val="evento" onclick="PersForm.selectTipo(this)">🎉 Evento especial</button>
+        <button class="chip-btn" data-val="otro" onclick="PersForm.selectTipo(this)">✨ Otro</button>
+      </div>
+      <div class="form-error" id="err-tipo">Selecciona el tipo de producto</div>
+    </div>
+
+    <!-- PASO 2: CANTIDAD -->
+    <div class="form-section" style="margin-top:20px">
+      <div class="form-section-label"><span class="step-num">2</span> Cantidad aproximada</div>
+      <div class="qty-presets" id="qty-presets">
+        <button class="qty-preset-btn" data-val="6" onclick="PersForm.selectQty(this,'6')">6 uds.</button>
+        <button class="qty-preset-btn" data-val="12" onclick="PersForm.selectQty(this,'12')">12 uds.</button>
+        <button class="qty-preset-btn" data-val="24" onclick="PersForm.selectQty(this,'24')">24 uds.</button>
+        <button class="qty-preset-btn" data-val="50" onclick="PersForm.selectQty(this,'50+')">50+ uds.</button>
+      </div>
+      <div class="qty-custom-row">
+        <span class="qty-custom-label">Otra cantidad:</span>
+        <input type="number" class="qty-custom-input" id="qty-custom" placeholder="Ej: 35" min="1"
+               oninput="PersForm.onQtyCustomInput(this.value)" />
+      </div>
+      <div class="form-error" id="err-qty">Indica la cantidad aproximada</div>
+    </div>
+
+    <!-- PASO 3: PREFERENCIAS DIETÉTICAS -->
+    <div class="form-section" style="margin-top:20px">
+      <div class="form-section-label"><span class="step-num">3</span> Preferencias dietéticas <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-3)">(opcional, varias)</span></div>
+      <div class="chip-grid" id="pref-chips">
+        <button class="chip-multi-btn" data-val="keto" onclick="PersForm.togglePref(this)">🥑 Keto</button>
+        <button class="chip-multi-btn" data-val="sin_azucar" onclick="PersForm.togglePref(this)">🍃 Sin azúcar</button>
+        <button class="chip-multi-btn" data-val="vegano" onclick="PersForm.togglePref(this)">🌱 Vegano</button>
+        <button class="chip-multi-btn" data-val="alto_proteina" onclick="PersForm.togglePref(this)">💪 Alto proteína</button>
+        <button class="chip-multi-btn" data-val="alta_fibra" onclick="PersForm.togglePref(this)">🌾 Alta fibra</button>
+        <button class="chip-multi-btn" data-val="sin_gluten" onclick="PersForm.togglePref(this)">🚫🌾 Sin gluten</button>
+        <button class="chip-multi-btn" data-val="sin_lactosa" onclick="PersForm.togglePref(this)">🥛 Sin lactosa</button>
+        <button class="chip-multi-btn" data-val="sin_mani" onclick="PersForm.togglePref(this)">🚫🥜 Sin maní</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: INGREDIENTES / SABORES -->
+    <div class="form-section" style="margin-top:20px">
+      <div class="form-section-label"><span class="step-num">4</span> Ingredientes o sabores destacados <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.7rem;color:var(--text-3)">(opcional)</span></div>
+      <div class="ingredient-chips" id="ingr-chips">
+        <button class="chip-multi-btn" data-val="avena" onclick="PersForm.toggleIngr(this)">🥣 Avena</button>
+        <button class="chip-multi-btn" data-val="cacao" onclick="PersForm.toggleIngr(this)">🍫 Cacao</button>
+        <button class="chip-multi-btn" data-val="mani" onclick="PersForm.toggleIngr(this)">🥜 Maní</button>
+        <button class="chip-multi-btn" data-val="coco" onclick="PersForm.toggleIngr(this)">🥥 Coco</button>
+        <button class="chip-multi-btn" data-val="frutos_rojos" onclick="PersForm.toggleIngr(this)">🍓 Frutos rojos</button>
+        <button class="chip-multi-btn" data-val="datiles" onclick="PersForm.toggleIngr(this)">🟤 Dátiles</button>
+        <button class="chip-multi-btn" data-val="vainilla" onclick="PersForm.toggleIngr(this)">🤍 Vainilla</button>
+        <button class="chip-multi-btn" data-val="almendras" onclick="PersForm.toggleIngr(this)">🌰 Almendras</button>
+        <button class="chip-multi-btn" data-val="mango" onclick="PersForm.toggleIngr(this)">🥭 Mango</button>
+        <button class="chip-multi-btn" data-val="canela" onclick="PersForm.toggleIngr(this)">🌿 Canela</button>
+      </div>
+      <div class="form-field" style="margin-top:10px">
+        <label class="form-label" for="ingr-extra">Otro ingrediente o comentario</label>
+        <textarea class="form-input" id="ingr-extra" rows="2" placeholder="Ej: sin maní, con más cacao, endulzado con stevia…"></textarea>
+      </div>
+    </div>
+
+    <!-- PASO 5: FECHA -->
+    <div class="form-section" style="margin-top:20px">
+      <div class="form-section-label"><span class="step-num">5</span> Fecha que necesitas</div>
+      <div class="form-field">
+        <input type="date" class="form-input" id="fecha-input" />
+        <span style="font-size:.78rem;color:var(--text-3);margin-top:2px">Recuerda: mínimo 48 hrs de anticipación. Eventos: 5 días hábiles.</span>
+      </div>
+    </div>
+
+    <!-- PASO 6: DATOS DE CONTACTO -->
+    <div class="form-section" style="margin-top:20px">
+      <div class="form-section-label"><span class="step-num">6</span> Tus datos</div>
+      <div class="form-field" style="margin-bottom:12px">
+        <label class="form-label" for="nombre-input">Nombre completo *</label>
+        <input type="text" class="form-input" id="nombre-input" placeholder="Ej: María González" autocomplete="name" />
+        <span class="form-error" id="err-nombre">Ingresa tu nombre</span>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="notas-input">Notas adicionales</label>
+        <textarea class="form-input" id="notas-input" rows="3" placeholder="Alergias, ocasión especial, empaque, colores de evento…"></textarea>
+      </div>
+    </div>
+
+    <!-- RESUMEN PREVIEW -->
+    <div class="order-preview" id="order-preview" style="display:none">
+      <div class="order-preview-title">📋 Resumen de tu pedido</div>
+      <div class="preview-row"><span class="pr-label">Tipo:</span><span class="pr-val" id="prev-tipo">—</span></div>
+      <div class="preview-row"><span class="pr-label">Cantidad:</span><span class="pr-val" id="prev-qty">—</span></div>
+      <div class="preview-row" id="prev-pref-row" style="display:none"><span class="pr-label">Preferencias:</span><span class="pr-val" id="prev-pref">—</span></div>
+      <div class="preview-row" id="prev-ingr-row" style="display:none"><span class="pr-label">Ingredientes:</span><span class="pr-val" id="prev-ingr">—</span></div>
+      <div class="preview-row" id="prev-fecha-row" style="display:none"><span class="pr-label">Fecha:</span><span class="pr-val" id="prev-fecha">—</span></div>
+    </div>
+
+    <!-- CTA WHATSAPP -->
+    <div class="cta-section">
+      <button class="btn-whatsapp-lg" onclick="PersForm.sendWhatsApp()">
+        <i class="fa-brands fa-whatsapp"></i>
+        Enviar pedido por WhatsApp
+      </button>
+      <p class="cta-note">
+        🔒 Tu información se envía directamente por WhatsApp.<br>
+        Te responderemos dentro de las próximas horas hábiles.
+      </p>
+    </div>
+
+    <div style="height:8px"></div>
+  </div>
+
+  <!-- FOOTER NAV -->
+  <footer class="page-footer-nav">
+    <a href="index.html" class="page-foot-btn"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
+    <a href="catalogo.html" class="page-foot-btn"><i class="fa-solid fa-store"></i><span>Catálogo</span></a>
+    <a href="personalizados.html" class="page-foot-btn active"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Personaliza</span></a>
+    <a href="catalogo.html" class="page-foot-btn">
+      <i class="fa-solid fa-bag-shopping"></i><span>Carrito</span>
+      <span class="page-foot-badge hidden" id="foot-cart-count">0</span>
+    </a>
+  </footer>
+
+  <script src="data-layer.js"></script>
+  <script>
+  'use strict';
+
+  const WHATSAPP_NUMBER = '56950147783';
+  const $ = (s, c = document) => c.querySelector(s);
+
+  /* ── CART BADGE ─────────────────────────── */
+  function refreshBadge() {
+    try {
+      const items = DataLayer.cart.load();
+      const c = items.reduce((s,i) => s + i.qty, 0);
+      const nb = $('#cart-badge-nav');
+      const fb = $('#foot-cart-count');
+      if (nb) { nb.textContent = c; nb.classList.toggle('hidden', c === 0); }
+      if (fb) { fb.textContent = c; fb.classList.toggle('hidden', c === 0); }
+    } catch(e) {}
+  }
+
+  /* ── FORM STATE ─────────────────────────── */
+  const FormState = {
+    tipo: '',
+    qty: '',
+    prefs: new Set(),
+    ingredients: new Set(),
+  };
+
+  /* ── LABEL MAPS ─────────────────────────── */
+  const TIPO_LABELS = {
+    barras:'Barras saludables', dulces:'Dulces saludables', snacks:'Snacks crujientes',
+    granolas:'Granola artesanal', mantequillas:'Mantequillas naturales', mix:'Mix surtido',
+    evento:'Pedido para evento especial', otro:'Otro tipo de producto'
+  };
+  const PREF_LABELS = {
+    keto:'🥑 Keto', sin_azucar:'🍃 Sin azúcar', vegano:'🌱 Vegano',
+    alto_proteina:'💪 Alto proteína', alta_fibra:'🌾 Alta fibra',
+    sin_gluten:'Sin gluten', sin_lactosa:'Sin lactosa', sin_mani:'Sin maní'
+  };
+  const INGR_LABELS = {
+    avena:'Avena', cacao:'Cacao', mani:'Maní', coco:'Coco', frutos_rojos:'Frutos rojos',
+    datiles:'Dátiles', vainilla:'Vainilla', almendras:'Almendras', mango:'Mango', canela:'Canela'
+  };
+
+  /* ── FORM CONTROLLER ─────────────────────── */
+  const PersForm = {
+
+    selectTipo(btn) {
+      document.querySelectorAll('#tipo-chips .chip-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      FormState.tipo = btn.dataset.val;
+      $('#err-tipo').classList.remove('show');
+      PersForm.updatePreview();
+    },
+
+    selectQty(btn, val) {
+      document.querySelectorAll('#qty-presets .qty-preset-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      FormState.qty = val;
+      const custom = $('#qty-custom');
+      if (custom) custom.value = '';
+      $('#err-qty').classList.remove('show');
+      PersForm.updatePreview();
+    },
+
+    onQtyCustomInput(val) {
+      document.querySelectorAll('#qty-presets .qty-preset-btn').forEach(b => b.classList.remove('selected'));
+      FormState.qty = val ? val + ' unidades' : '';
+      $('#err-qty').classList.remove('show');
+      PersForm.updatePreview();
+    },
+
+    togglePref(btn) {
+      const val = btn.dataset.val;
+      if (FormState.prefs.has(val)) { FormState.prefs.delete(val); btn.classList.remove('selected'); }
+      else { FormState.prefs.add(val); btn.classList.add('selected'); }
+      PersForm.updatePreview();
+    },
+
+    toggleIngr(btn) {
+      const val = btn.dataset.val;
+      if (FormState.ingredients.has(val)) { FormState.ingredients.delete(val); btn.classList.remove('selected'); }
+      else { FormState.ingredients.add(val); btn.classList.add('selected'); }
+      PersForm.updatePreview();
+    },
+
+    updatePreview() {
+      const preview = $('#order-preview');
+      const hasData = FormState.tipo || FormState.qty;
+      if (!hasData) { if (preview) preview.style.display = 'none'; return; }
+      if (preview) preview.style.display = 'block';
+
+      const prevTipo = $('#prev-tipo');
+      if (prevTipo) prevTipo.textContent = FormState.tipo ? (TIPO_LABELS[FormState.tipo] || FormState.tipo) : '—';
+
+      const prevQty = $('#prev-qty');
+      if (prevQty) prevQty.textContent = FormState.qty || '—';
+
+      const prefArr = [...FormState.prefs].map(p => PREF_LABELS[p] || p);
+      const prefRow = $('#prev-pref-row');
+      if (prefRow) prefRow.style.display = prefArr.length ? 'flex' : 'none';
+      const prevPref = $('#prev-pref');
+      if (prevPref) prevPref.textContent = prefArr.join(', ');
+
+      const ingrArr = [...FormState.ingredients].map(i => INGR_LABELS[i] || i);
+      const ingrRow = $('#prev-ingr-row');
+      if (ingrRow) ingrRow.style.display = ingrArr.length ? 'flex' : 'none';
+      const prevIngr = $('#prev-ingr');
+      if (prevIngr) prevIngr.textContent = ingrArr.join(', ');
+
+      const fechaVal = $('#fecha-input')?.value;
+      const fechaRow = $('#prev-fecha-row');
+      if (fechaRow) fechaRow.style.display = fechaVal ? 'flex' : 'none';
+      const prevFecha = $('#prev-fecha');
+      if (prevFecha && fechaVal) {
+        const [y,m,d] = fechaVal.split('-');
+        prevFecha.textContent = `${d}/${m}/${y}`;
+      }
+    },
+
+    validate() {
+      let valid = true;
+      if (!FormState.tipo) { $('#err-tipo').classList.add('show'); valid = false; }
+      if (!FormState.qty) {
+        const customVal = $('#qty-custom')?.value;
+        if (!customVal) { $('#err-qty').classList.add('show'); valid = false; }
+        else { FormState.qty = customVal + ' unidades'; }
+      }
+      const nombre = $('#nombre-input');
+      if (!nombre?.value.trim()) {
+        nombre?.classList.add('error');
+        $('#err-nombre').classList.add('show');
+        valid = false;
+      } else {
+        nombre?.classList.remove('error');
+        $('#err-nombre').classList.remove('show');
+      }
+      return valid;
+    },
+
+    sendWhatsApp() {
+      if (!PersForm.validate()) {
+        const firstErr = document.querySelector('.form-error.show, .form-input.error');
+        if (firstErr) firstErr.scrollIntoView({ behavior:'smooth', block:'center' });
+        return;
+      }
+
+      const nombre   = $('#nombre-input')?.value.trim() || '';
+      const notas    = $('#notas-input')?.value.trim()  || '';
+      const ingrExtra= $('#ingr-extra')?.value.trim()   || '';
+      const fechaVal = $('#fecha-input')?.value;
+      let fechaStr   = '';
+      if (fechaVal) { const [y,m,d]=fechaVal.split('-'); fechaStr=`${d}/${m}/${y}`; }
+
+      const prefStr  = [...FormState.prefs].map(p=>PREF_LABELS[p]||p).join(', ') || 'Sin especificar';
+      const ingrArr  = [...FormState.ingredients].map(i=>INGR_LABELS[i]||i);
+      if (ingrExtra) ingrArr.push(ingrExtra);
+      const ingrStr  = ingrArr.join(', ') || 'Sin especificar';
+
+      const msg = encodeURIComponent(
+        `🌿 *PEDIDO PERSONALIZADO — Círculo de Sabores*\n\n` +
+        `👤 *Nombre:* ${nombre}\n` +
+        `📦 *Tipo de producto:* ${TIPO_LABELS[FormState.tipo] || FormState.tipo}\n` +
+        `🔢 *Cantidad aprox.:* ${FormState.qty}\n` +
+        `🥗 *Preferencias dietéticas:* ${prefStr}\n` +
+        `🌾 *Ingredientes / sabores:* ${ingrStr}\n` +
+        (fechaStr ? `📅 *Fecha que necesita:* ${fechaStr}\n` : '') +
+        (notas ? `📝 *Notas adicionales:* ${notas}\n` : '') +
+        `\n_Enviado desde Pedidos Personalizados — circulodesabores.cl_`
+      );
+
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+    },
+  };
+
+  /* ── DATE MIN (hoy) ──────────────────────── */
+  document.addEventListener('DOMContentLoaded', () => {
+    try { DataLayer.init(); } catch(e) {}
+    refreshBadge();
+
+    const dateInput = $('#fecha-input');
+    if (dateInput) {
+      const today = new Date();
+      const minDate = new Date(today.getTime() + 48*60*60*1000);
+      dateInput.min = minDate.toISOString().split('T')[0];
+      dateInput.addEventListener('change', PersForm.updatePreview);
+    }
+  });
+  </script>
+</body>
+</html>

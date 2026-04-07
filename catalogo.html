@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#F5E9DA" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Catálogo — Círculo de Sabores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { overflow: auto !important; height: auto !important; }
+    .page-scroll { padding-top: var(--navbar-h); padding-bottom: calc(var(--footer-h) + 8px); min-height: 100vh; background: var(--bg); }
+    .nav-back-btn { width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:.88rem;box-shadow:var(--shadow-s);text-decoration:none; }
+    .delivery-banner { margin: 12px 16px 0; }
+    .sticky-filters { position:sticky;top:var(--navbar-h);z-index:50;background:var(--bg);padding-bottom:4px; }
+    .delivery-highlight { color:var(--success); }
+    /* modal */
+    .modal-backdrop { position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:400;display:none;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px); }
+    .modal-backdrop.open { display:block; }
+    .product-modal { position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-l) var(--r-l) 0 0;z-index:401;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom); }
+    .product-modal::-webkit-scrollbar { display:none; }
+    .product-modal.open { transform:translateY(0); }
+    .modal-handle-wrap { display:flex;justify-content:center;padding:12px 0 4px;position:sticky;top:0;background:var(--surface);z-index:2; }
+    .modal-handle { width:36px;height:4px;border-radius:2px;background:var(--border); }
+    .modal-close-btn { position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;background:var(--bg);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:.85rem;z-index:3; }
+    .modal-img { width:100%;aspect-ratio:4/3;background:linear-gradient(140deg,var(--navbar) 0%,var(--accent-l) 100%);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center; }
+    .modal-img img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0; }
+    .modal-body { padding:18px 16px 24px; }
+    /* footer nav */
+    .page-footer-nav { position:fixed;bottom:0;left:0;right:0;height:var(--footer-h);background:rgba(245,233,218,.95);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-around;border-top:1px solid var(--border);z-index:100;padding-bottom:env(safe-area-inset-bottom); }
+    .page-foot-btn { flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);font-size:.68rem;font-weight:500;letter-spacing:.02em;position:relative;text-decoration:none; }
+    .page-foot-btn i { font-size:1.15rem; }
+    .page-foot-btn.active { color:var(--primary); }
+    .page-foot-badge { position:absolute;top:8px;right:calc(50% - 18px);min-width:16px;height:16px;background:var(--primary);color:#fff;border-radius:8px;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px; }
+    .page-foot-badge.hidden { display:none; }
+    /* artesanal */
+    .artesanal-block { position:relative;overflow:hidden;background:linear-gradient(135deg,#1a4a2e 0%,#2d6e46 50%,#1a4a2e 100%);padding:14px 20px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:3px;animation:artesanal-levitate 3.2s ease-in-out infinite;box-shadow:0 6px 28px rgba(26,74,46,.35); }
+    .artesanal-shimmer { position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.18) 46%,rgba(255,255,255,.32) 50%,rgba(255,255,255,.18) 54%,transparent 70%);background-size:200% 100%;animation:shimmer-slide 2.8s ease-in-out infinite; }
+    @keyframes shimmer-slide { 0%{background-position:200% 0}100%{background-position:-200% 0} }
+    @keyframes artesanal-levitate { 0%,100%{transform:translateY(0);box-shadow:0 6px 28px rgba(26,74,46,.35)}50%{transform:translateY(-3px);box-shadow:0 12px 38px rgba(26,74,46,.48)} }
+    .artesanal-text { position:relative;z-index:2;font-family:var(--font-display);font-style:italic;font-size:1.1rem;color:#fff;text-shadow:0 0 20px rgba(255,255,255,.3); }
+    .artesanal-sub { position:relative;z-index:2;font-size:.68rem;color:rgba(255,255,255,.72);font-weight:500;letter-spacing:.06em;text-transform:uppercase; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="nav-back-btn" aria-label="Volver"><i class="fa-solid fa-chevron-left"></i></a>
+    <span class="nav-brand-text" style="font-family:var(--font-display);font-style:italic;color:var(--primary);font-size:1.1rem">Catálogo</span>
+    <div class="nav-actions">
+      <div id="cart-badge-nav" class="cart-badge-nav hidden">0</div>
+      <a href="index.html" class="nav-btn" aria-label="Carrito" style="text-decoration:none"><i class="fa-solid fa-bag-shopping"></i></a>
+    </div>
+  </nav>
+
+  <div class="page-scroll">
+    <div class="artesanal-block">
+      <div class="artesanal-shimmer"></div>
+      <span class="artesanal-text">✦ 100% Artesanal ✦</span>
+      <span class="artesanal-sub">Sin conservantes · Ingredientes reales</span>
+    </div>
+
+    <div class="delivery-banner" id="delivery-banner">
+      <div class="db-icon-wrap"><i class="fa-solid fa-truck"></i></div>
+      <div class="db-right">
+        <div class="db-text" id="db-text">Agrega <strong>$20.000</strong> para activar el delivery gratis</div>
+        <div class="db-progress-track"><div class="db-progress-fill" id="db-fill" style="width:0%"></div></div>
+        <div class="db-progress-label" id="db-label">$0 / $20.000</div>
+      </div>
+    </div>
+
+    <div class="sticky-filters">
+      <div class="search-wrap">
+        <div class="search-inner">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="search-input" placeholder="Buscar producto…" id="search-input" />
+          <button class="search-clear" id="search-clear" onclick="CatPage.clearSearch()" style="display:none"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="filters-wrap cat-filters" id="cat-filters"></div>
+      <div class="tag-filters-wrap" id="tag-filters"></div>
+    </div>
+
+    <div class="section-label-row" style="padding:4px 16px 8px">
+      <span class="section-label" id="section-label-text">Catálogo</span>
+      <span class="section-count" id="section-count">0 productos</span>
+    </div>
+
+    <div class="products-grid" id="products-grid" style="padding:0 16px 20px"></div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-backdrop" onclick="CatPage.closeModal()"></div>
+  <div class="product-modal" id="product-modal">
+    <div class="modal-handle-wrap">
+      <div class="modal-handle"></div>
+      <button class="modal-close-btn" onclick="CatPage.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="modal-content"></div>
+  </div>
+
+  <footer class="page-footer-nav">
+    <a href="index.html" class="page-foot-btn"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
+    <a href="catalogo.html" class="page-foot-btn active"><i class="fa-solid fa-store"></i><span>Catálogo</span></a>
+    <a href="personalizados.html" class="page-foot-btn"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Personaliza</span></a>
+    <a href="catalogo.html" class="page-foot-btn" id="foot-cart-link" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});return false;">
+      <i class="fa-solid fa-bag-shopping"></i><span>Carrito</span>
+      <span class="page-foot-badge hidden" id="foot-cart-count">0</span>
+    </a>
+  </footer>
+
+  <script src="data-layer.js"></script>
+  <script>
+  'use strict';
+  const TAGS={keto:{label:'Keto',icon:'🥑',color:'#5b4fcf'},sin_azucar:{label:'Sin Azúcar',icon:'🍃',color:'#059669'},alto_proteina:{label:'Alto Proteína',icon:'💪',color:'#c2410c'},alta_fibra:{label:'Alta Fibra',icon:'🌾',color:'#0369a1'},energizante:{label:'Energizante',icon:'⚡',color:'#b45309'},vegano:{label:'Vegano',icon:'🌱',color:'#16a34a'}};
+  const CATEGORY_META={todos:{label:'Todos',emoji:'🌿'},barras:{label:'Barras Saludables',emoji:'🌾'},dulces:{label:'Dulces Saludables',emoji:'🍫'},frutos:{label:'Frutos Secos',emoji:'🥜'},snacks:{label:'Snacks Crujientes',emoji:'🥥'},reposteria:{label:'Repostería Artesanal',emoji:'🧁'},keto:{label:'Keto',emoji:'🥑'},funcional:{label:'Funcional / Fit',emoji:'💪'},mantequillas:{label:'Mantequillas Naturales',emoji:'🫙'},granolas:{label:'Granolas y Desayunos',emoji:'🥣'},superfoods:{label:'Superfoods',emoji:'✨'},packs:{label:'Packs y Combos',emoji:'📦'}};
+  const BASE_PRODUCTS=[
+    {id:'bar-energia',name:'Energía del Día',category:'barras',emoji:'🌾',desc:'Avena, miel de ulmo, semillas de chía y frutos secos. Energía real sin azúcar refinada.',priceUnit:1500,pricePack4:5400,pricePack8:10000,badge:'Más vendida',badgeStyle:'',tags:['energizante','alta_fibra'],attrs:['Sin conservantes','Artesanal']},
+    {id:'bar-cacao',name:'Cacao Profundo',category:'barras',emoji:'🍫',desc:'Cacao 70%, avellanas y dátiles. Antioxidantes naturales en cada mordida.',priceUnit:1600,pricePack4:5760,pricePack8:10560,badge:null,badgeStyle:'',tags:['sin_azucar','vegano'],attrs:['Cacao ≥70%','Sin azúcar añadida']},
+    {id:'bar-frutos',name:'Frutos del Bosque',category:'barras',emoji:'🫐',desc:'Arándanos, frambuesas liofilizadas y semillas de linaza. Fresco y nutritivo.',priceUnit:1600,pricePack4:5760,pricePack8:10560,badge:null,badgeStyle:'',tags:['sin_azucar','vegano','alta_fibra'],attrs:['Sin azúcar añadida','Antioxidante']},
+    {id:'bar-tropical',name:'Tropical Mix',category:'barras',emoji:'🥭',desc:'Mango, coco rallado y maracuyá deshidratado. Vitamina C en forma de snack.',priceUnit:1500,pricePack4:5400,pricePack8:10000,badge:'¡Nuevo!',badgeStyle:'badge-gold',tags:['energizante','vegano'],attrs:['Sin fritura','Deshidratado natural']},
+    {id:'bar-proteica',name:'Barra Proteica Vainilla',category:'barras',emoji:'💛',desc:'Proteína vegetal, avena y vainilla natural. 12g de proteína por barra.',priceUnit:1800,pricePack4:6480,pricePack8:11880,badge:'Top Fit',badgeStyle:'',tags:['alto_proteina','sin_azucar'],attrs:['12g proteína','Sin azúcar añadida']},
+    {id:'dulce-brownie',name:'Brownie Sin Azúcar',category:'dulces',emoji:'🟫',desc:'Cacao puro, eritritol y nueces. Todo el placer del brownie sin el azúcar.',priceUnit:1700,pricePack4:6120,pricePack8:11220,badge:'Sin culpa',badgeStyle:'',tags:['sin_azucar','keto'],attrs:['Sin azúcar','Apto keto']},
+    {id:'dulce-trufas',name:'Trufas de Coco',category:'dulces',emoji:'🤍',desc:'Dátiles Medjool, coco rallado y cacao puro. Dulces sin procesar.',priceUnit:1600,pricePack4:5760,pricePack8:10560,badge:null,badgeStyle:'',tags:['vegano','sin_azucar'],attrs:['100% Natural','Vegano']},
+    {id:'dulce-bolitas',name:'Bolitas Energéticas',category:'dulces',emoji:'⚡',desc:'Avena, mantequilla de maní, miel y chips de cacao. El snack perfecto pre-entreno.',priceUnit:1500,pricePack4:5400,pricePack8:10000,badge:null,badgeStyle:'',tags:['alto_proteina','energizante'],attrs:['Pre-entreno','Sin aditivos']},
+    {id:'frutos-nuez',name:'Mix Nuez Andina',category:'frutos',emoji:'🥜',desc:'Nueces, pecanas y almendras tostadas al horno sin aceites añadidos.',priceUnit:1800,pricePack4:6480,pricePack8:11880,badge:null,badgeStyle:'',tags:['keto','vegano','alto_proteina'],attrs:['Sin aceites','Horneado']},
+    {id:'frutos-antioxidante',name:'Mix Antioxidante',category:'frutos',emoji:'🍇',desc:'Arándanos deshidratados, almendras, nueces y semillas de calabaza.',priceUnit:1900,pricePack4:6840,pricePack8:12540,badge:'⭐ Favorito',badgeStyle:'badge-gold',tags:['sin_azucar','vegano'],attrs:['Antioxidante','Sin azúcar añadida']},
+    {id:'frutos-caju',name:'Cajú Premium Tostado',category:'frutos',emoji:'🌰',desc:'Cajú entero tostado sin sal ni aceites. Textura crujiente y sabor suave.',priceUnit:2000,pricePack4:7200,pricePack8:13200,badge:null,badgeStyle:'',tags:['keto','vegano'],attrs:['Sin sal','Sin aceites']},
+    {id:'snack-chips-coco',name:'Chips de Coco',category:'snacks',emoji:'🥥',desc:'Láminas de coco deshidratado con un toque de sal de mar. Crujiente e irresistible.',priceUnit:1600,pricePack4:5760,pricePack8:10560,badge:null,badgeStyle:'',tags:['keto','sin_azucar','vegano'],attrs:['Sin fritura','Keto']},
+    {id:'snack-platano',name:'Plátano Deshidratado',category:'snacks',emoji:'🍌',desc:'Rodajas de plátano natural deshidratado. Sin azúcar añadida, sin sulfitos.',priceUnit:1400,pricePack4:5040,pricePack8:9240,badge:null,badgeStyle:'',tags:['energizante','vegano'],attrs:['Sin sulfitos','Natural']},
+    {id:'snack-mix-horneado',name:'Mix Snack Horneado',category:'snacks',emoji:'🫘',desc:'Garbanzos, semillas y hierbas. Crujiente, saciante y sin fritura.',priceUnit:1600,pricePack4:5760,pricePack8:10560,badge:'¡Nuevo!',badgeStyle:'badge-gold',tags:['sin_azucar','alta_fibra','vegano'],attrs:['Sin fritura','Alta fibra']},
+    {id:'keto-barra',name:'Barra Keto Almendra',category:'keto',emoji:'🥑',desc:'Almendras, aceite de coco, eritritol y cacao. Alta en grasas buenas y low-carb.',priceUnit:2000,pricePack4:7200,pricePack8:13200,badge:'Keto ✓',badgeStyle:'badge-keto',tags:['keto','sin_azucar','alto_proteina'],attrs:['Low-carb','Alto en grasas buenas']},
+    {id:'keto-brownie',name:'Brownie Keto',category:'keto',emoji:'🟤',desc:'Cacao 85%, harina de almendra y eritritol. El postre keto que realmente satisface.',priceUnit:1900,pricePack4:6840,pricePack8:12540,badge:'Keto ✓',badgeStyle:'badge-keto',tags:['keto','sin_azucar'],attrs:['Low-carb','Sin gluten']},
+    {id:'keto-galleta',name:'Galleta Keto Chocochip',category:'keto',emoji:'🍪',desc:'Harina de almendra, mantequilla, eritritol y chips de cacao sin azúcar.',priceUnit:1700,pricePack4:6120,pricePack8:11220,badge:'Keto ✓',badgeStyle:'badge-keto',tags:['keto','sin_azucar'],attrs:['Sin gluten','Low-carb']},
+    {id:'fit-barra-cacao',name:'Barra Fit Cacao & Proteína',category:'funcional',emoji:'💪',desc:'Proteína vegetal de guisante, cacao 70% y avena. 15g de proteína por barra.',priceUnit:2000,pricePack4:7200,pricePack8:13200,badge:'15g Proteína',badgeStyle:'',tags:['alto_proteina','energizante','sin_azucar'],attrs:['15g proteína','Pre/post entreno']},
+    {id:'fit-mix-fibra',name:'Mix Saciante Alta Fibra',category:'funcional',emoji:'🌾',desc:'Psyllium, semillas de chía, linaza y frutos secos. Máxima saciedad natural.',priceUnit:1800,pricePack4:6480,pricePack8:11880,badge:null,badgeStyle:'',tags:['alta_fibra','vegano','keto'],attrs:['Alta fibra','Saciante']},
+    {id:'mant-mani',name:'Mantequilla de Maní Natural',category:'mantequillas',emoji:'🫙',desc:'Maní tostado 100% sin azúcar, sal ni aceite añadido. Solo maní, todo el sabor.',priceUnit:3500,pricePack4:12600,pricePack8:23100,badge:'Sin aditivos',badgeStyle:'',tags:['alto_proteina','sin_azucar','vegano'],attrs:['100% maní','Sin azúcar añadida']},
+    {id:'mant-almendra',name:'Mantequilla de Almendra',category:'mantequillas',emoji:'🤎',desc:'Almendras tostadas al horno, sin aditivos. Rica en vitamina E y magnesio.',priceUnit:4500,pricePack4:16200,pricePack8:29700,badge:'Premium',badgeStyle:'badge-gold',tags:['keto','sin_azucar','alto_proteina'],attrs:['Keto','Sin azúcar añadida']},
+    {id:'gran-artesanal',name:'Granola Artesanal Sin Azúcar',category:'granolas',emoji:'🌿',desc:'Avena horneada con miel de ulmo, quinoa y semillas de maravilla. Crujiente natural.',priceUnit:2000,pricePack4:7200,pricePack8:13200,badge:null,badgeStyle:'',tags:['sin_azucar','alta_fibra'],attrs:['Sin azúcar añadida','Horneada']},
+    {id:'gran-keto',name:'Granola Keto',category:'granolas',emoji:'🥥',desc:'Coco rallado, nueces, almendras y semillas. Sin granos, sin azúcar, 100% keto.',priceUnit:2200,pricePack4:7920,pricePack8:14520,badge:'Keto ✓',badgeStyle:'badge-keto',tags:['keto','sin_azucar','vegano'],attrs:['Sin granos','Low-carb']},
+    {id:'super-proteina',name:'Proteína Vegetal Natural',category:'superfoods',emoji:'💚',desc:'Mezcla de proteína de guisante y arroz integral. Perfil aminoácido completo.',priceUnit:4000,pricePack4:14400,pricePack8:26400,badge:'Vegana',badgeStyle:'',tags:['alto_proteina','vegano','sin_azucar'],attrs:['Proteína completa','Vegano']},
+    {id:'pack-degustacion',name:'Pack Degustación (6 barras)',category:'packs',emoji:'📦',desc:'6 barras surtidas a elección: energía, cacao, frutos del bosque y más.',priceUnit:8500,pricePack4:30600,pricePack8:56100,badge:'Elige tú',badgeStyle:'badge-gold',tags:['energizante'],attrs:['6 sabores','Personalizable']},
+    {id:'pack-keto-semanal',name:'Pack Keto Semanal',category:'packs',emoji:'🥑',desc:'Surtido semanal keto: barras, galletas, chips y snack. Todo lo que necesitas.',priceUnit:12000,pricePack4:43200,pricePack8:79200,badge:'Keto ✓',badgeStyle:'badge-keto',tags:['keto','sin_azucar'],attrs:['7 productos','Keto garantizado']},
+  ];
+
+  const DELIVERY_FREE_THRESHOLD = 20000;
+  const $  = (s,c=document) => c.querySelector(s);
+  const $$ = (s,c=document) => [...c.querySelectorAll(s)];
+  const fmt = n => '$' + n.toLocaleString('es-CL');
+
+  function getPackInfo(p,type){const m={unit:{units:1,price:p.priceUnit,label:'1 unidad'},pack4:{units:4,price:p.pricePack4,label:'Pack x4'},pack8:{units:8,price:p.pricePack8,label:'Pack x8'}};return m[type]||m.unit;}
+
+  const CatCart={
+    _items:[],
+    load(){CatCart._items=DataLayer.cart.load();},
+    save(){DataLayer.cart.save(CatCart._items);},
+    total(){return CatCart._items.reduce((s,i)=>s+i.priceTotal,0);},
+    count(){return CatCart._items.reduce((s,i)=>s+i.qty,0);},
+    add(p,type,qty){const info=getPackInfo(p,type);const ex=CatCart._items.find(i=>i.id===p.id&&i.type===type);if(ex){ex.qty+=qty;ex.units=ex.qty*info.units;ex.priceTotal=ex.qty*info.price;}else{CatCart._items.push({id:p.id,name:p.name,emoji:p.emoji,type,typeLabel:info.label,qty,units:qty*info.units,priceUnit:info.price,priceTotal:qty*info.price});}CatCart.save();CatPage.refreshBadge();CatPage.refreshDeliveryBanner();}
+  };
+
+  const CatState={searchQuery:'',activeCategory:'todos',activeTag:null,modalProduct:null,modalType:'unit',modalQty:1};
+
+  function showCatToast(msg,icon='✓'){$$('.toast').forEach(t=>t.remove());const el=document.createElement('div');el.className='toast';el.innerHTML=`<span>${icon}</span><span>${msg}</span>`;document.body.appendChild(el);setTimeout(()=>el.remove(),2100);}
+
+  const CatPage={
+    init(){
+      DataLayer.init();
+      CatCart.load();
+      CatPage.renderCategoryFilters();
+      CatPage.renderTagFilters();
+      CatPage.renderGrid();
+      CatPage.refreshBadge();
+      CatPage.refreshDeliveryBanner();
+      const inp=$('#search-input');
+      if(inp)inp.addEventListener('input',e=>{CatState.searchQuery=e.target.value;$('#search-clear').style.display=e.target.value?'flex':'none';CatPage.renderGrid();});
+    },
+    refreshBadge(){const c=CatCart.count();const nb=$('#cart-badge-nav');const fb=$('#foot-cart-count');if(nb){nb.textContent=c;nb.classList.toggle('hidden',c===0);}if(fb){fb.textContent=c;fb.classList.toggle('hidden',c===0);}},
+    refreshDeliveryBanner(){
+      const total=CatCart.total();const isFree=total>=DELIVERY_FREE_THRESHOLD;const remaining=Math.max(0,DELIVERY_FREE_THRESHOLD-total);const progress=Math.min(100,(total/DELIVERY_FREE_THRESHOLD)*100);
+      const banner=$('#delivery-banner');if(banner)banner.className='delivery-banner'+(isFree?' unlocked':'');
+      const icon=banner?.querySelector('.db-icon-wrap i');if(icon)icon.className=`fa-solid fa-${isFree?'circle-check':'truck'}`;
+      const textEl=$('#db-text');if(textEl)textEl.innerHTML=isFree?`<strong>¡Delivery gratis activado! 🎉</strong> Tu pedido supera los <strong style="color:var(--success)">$20.000</strong>`:`Agrega <strong>$${remaining.toLocaleString('es-CL')} más</strong> y activa el delivery gratis`;
+      const fill=$('#db-fill');if(fill)fill.style.width=progress+'%';
+      const label=$('#db-label');if(label)label.innerHTML=`$${total.toLocaleString('es-CL')} / <strong style="color:var(--success)">$20.000</strong>`;
+    },
+    renderCategoryFilters(){
+      const wrap=$('#cat-filters');if(!wrap)return;
+      wrap.innerHTML=Object.keys(CATEGORY_META).map(c=>{const meta=CATEGORY_META[c];const isAll=c==='todos';return`<button class="filter-btn ${CatState.activeCategory===c?'active':''}" data-cat="${c}" onclick="CatPage.setCategory('${c}')">${!isAll?`<span class="filter-emoji">${meta.emoji}</span> `:''} ${isAll?'Todos':meta.label}</button>`;}).join('');
+    },
+    renderTagFilters(){
+      const wrap=$('#tag-filters');if(!wrap)return;
+      wrap.innerHTML=Object.entries(TAGS).map(([key,tag])=>`<button class="tag-filter-btn ${CatState.activeTag===key?'active':''}" data-tag="${key}" onclick="CatPage.toggleTag('${key}')" style="--tag-color:${tag.color}">${tag.icon} ${tag.label}</button>`).join('');
+    },
+    setCategory(cat){
+      CatState.activeCategory=cat;
+      $$('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));
+      const lbl=$('#section-label-text');if(lbl)lbl.textContent=cat==='todos'?'Catálogo':(CATEGORY_META[cat]?.label||'Catálogo');
+      CatPage.renderGrid();
+    },
+    toggleTag(tag){
+      CatState.activeTag=CatState.activeTag===tag?null:tag;
+      $$('.tag-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.tag===CatState.activeTag));
+      CatPage.renderGrid();
+    },
+    clearSearch(){CatState.searchQuery='';const inp=$('#search-input');if(inp)inp.value='';$('#search-clear').style.display='none';CatPage.renderGrid();},
+    clearFilters(){CatState.searchQuery='';CatState.activeCategory='todos';CatState.activeTag=null;const inp=$('#search-input');if(inp)inp.value='';$$('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.cat==='todos'));$$('.tag-filter-btn').forEach(b=>b.classList.remove('active'));CatPage.renderGrid();},
+    renderGrid(){
+      const products=DataLayer.products.getActive();const q=CatState.searchQuery.toLowerCase();
+      const filtered=products.filter(p=>{const mC=CatState.activeCategory==='todos'||p.category===CatState.activeCategory;const mT=!CatState.activeTag||(p.tags&&p.tags.includes(CatState.activeTag));const mS=!q||p.name.toLowerCase().includes(q)||(p.desc||'').toLowerCase().includes(q);return mC&&mT&&mS;});
+      const countEl=$('#section-count');if(countEl)countEl.textContent=`${filtered.length} producto${filtered.length!==1?'s':''}`;
+      const grid=$('#products-grid');if(!grid)return;
+      if(filtered.length===0){grid.innerHTML=`<div class="no-results" style="grid-column:1/-1"><i class="fa-solid fa-magnifying-glass"></i><p>Sin resultados${CatState.searchQuery?` para "<strong>${CatState.searchQuery}</strong>"`:" para este filtro"}</p><button class="btn-ghost" onclick="CatPage.clearFilters()">Limpiar filtros</button></div>`;return;}
+      grid.innerHTML=filtered.map(p=>CatPage._cardHTML(p)).join('');
+    },
+    _cardHTML(p){
+      const disc4=Math.round((1-p.pricePack4/(p.priceUnit*4))*100);const imgPath=`images/productos/${p.id}/1.jpg`;
+      const tagPills=(p.tags||[]).slice(0,2).map(t=>{const tag=TAGS[t];return tag?`<span class="card-tag-pill" style="--tag-color:${tag.color}">${tag.icon} ${tag.label}</span>`:''}).join('');
+      return`<div class="product-card" onclick="CatPage.openModal('${p.id}')">${p.badge?`<span class="card-badge ${p.badgeStyle||''}">${p.badge}</span>`:''}<div class="card-img-placeholder"><img src="${imgPath}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="card-img-fallback" style="display:none"><img src="images/logo.png" class="fallback-logo" alt=""/><div class="fallback-beige-overlay"></div><span class="fallback-nophoto">No-Photo</span></div></div><div class="card-body"><div class="card-name">${p.name}</div>${tagPills?`<div class="card-tags">${tagPills}</div>`:''}<div class="card-desc">${(p.desc||'').substring(0,52)}…</div><div class="card-pricing"><div class="card-price-unit">Unidad <span>${fmt(p.priceUnit)}</span></div>${disc4>0?`<div class="card-price-pack"><i class="fa-solid fa-tag"></i> Pack x4 (−${disc4}%)</div>`:''}</div><div class="card-actions"><button class="btn-card-detail" onclick="event.stopPropagation();CatPage.openModal('${p.id}')">Ver más</button><button class="btn-card-add" onclick="event.stopPropagation();CatPage.quickAdd('${p.id}')"><i class="fa-solid fa-plus"></i> Pack 4</button></div></div></div>`;
+    },
+    quickAdd(id){const p=DataLayer.products.getById(id);if(!p)return;CatCart.add(p,'pack4',1);showCatToast(`Pack x4 de ${p.name} agregado`,'✓');},
+    openModal(id){
+      const p=DataLayer.products.getById(id);if(!p)return;
+      CatState.modalProduct=p;CatState.modalType='unit';CatState.modalQty=1;
+      CatPage._renderModal();
+      $('#product-modal')?.classList.add('open');
+      $('#modal-backdrop')?.classList.add('open');
+      document.body.style.overflow='hidden';
+    },
+    closeModal(){$('#product-modal')?.classList.remove('open');$('#modal-backdrop')?.classList.remove('open');document.body.style.overflow='';},
+    _renderModal(){
+      const p=CatState.modalProduct;if(!p)return;const type=CatState.modalType;const qty=CatState.modalQty;const info=getPackInfo(p,type);const total=info.price*qty;
+      const disc4=Math.round((1-p.pricePack4/(p.priceUnit*4))*100);const disc8=Math.round((1-p.pricePack8/(p.priceUnit*8))*100);const imgPath=`images/productos/${p.id}/1.jpg`;
+      const tagChips=(p.tags||[]).map(t=>{const tag=TAGS[t];return tag?`<span class="product-tag-chip" style="--tag-color:${tag.color}">${tag.icon} ${tag.label}</span>`:''}).join('');
+      const typeBtn=(t,lbl,q,price,save)=>`<div class="type-btn ${type===t?'selected':''}" onclick="CatPage.selectModalType('${t}')"><div class="tb-label">${lbl}</div><div class="tb-qty">${q}</div><div class="tb-price">${fmt(price)}</div>${save?`<div class="tb-save">−${save}%</div>`:''}</div>`;
+      const content=$('#modal-content');if(!content)return;
+      content.innerHTML=`<div class="modal-img"><img src="${imgPath}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/><div class="card-img-fallback" style="display:none;width:100%;height:100%"><img src="images/logo.png" class="fallback-logo fallback-logo-lg" alt=""/><div class="fallback-beige-overlay"></div><span class="fallback-nophoto">No-Photo</span></div></div><div class="modal-body"><div class="product-meta-row"><span class="product-category-tag">${CATEGORY_META[p.category]?.emoji||''} ${CATEGORY_META[p.category]?.label||p.category}</span>${tagChips}</div><h2 class="product-name">${p.name}</h2>${(p.attrs||[]).length?`<div class="product-attrs">${(p.attrs||[]).map(a=>`<span class="product-attr-pill">${a}</span>`).join('')}</div>`:''}<p class="product-desc">${p.desc}</p><div class="type-selector">${typeBtn('unit','Unidad','1 ud.',p.priceUnit,0)}${typeBtn('pack4','Pack','4 uds.',p.pricePack4,disc4)}${typeBtn('pack8','Pack','8 uds.',p.pricePack8,disc8)}</div><div class="counter-row"><span class="counter-label">Cantidad</span><div class="counter"><button class="counter-btn" onclick="CatPage.changeModalQty(-1)">−</button><span class="counter-val" id="modal-qty">${qty}</span><button class="counter-btn" onclick="CatPage.changeModalQty(1)">+</button></div></div><div class="total-row"><span class="tr-label">Total</span><span class="tr-amount" id="modal-total">${fmt(total)}</span></div><button class="btn-add-full" id="modal-add-btn" onclick="CatPage.addModalToCart()"><i class="fa-solid fa-bag-shopping"></i> Agregar al carrito · ${fmt(total)}</button><a href="index.html" class="btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;text-decoration:none"><i class="fa-solid fa-bag-shopping"></i> Ir al carrito</a></div>`;
+    },
+    selectModalType(t){CatState.modalType=t;CatState.modalQty=1;CatPage._renderModal();},
+    changeModalQty(delta){
+      CatState.modalQty=Math.max(1,CatState.modalQty+delta);const p=CatState.modalProduct;const info=getPackInfo(p,CatState.modalType);const total=info.price*CatState.modalQty;
+      const qtyEl=$('#modal-qty');const totalEl=$('#modal-total');const addBtn=$('#modal-add-btn');
+      if(qtyEl)qtyEl.textContent=CatState.modalQty;if(totalEl)totalEl.textContent=fmt(total);if(addBtn)addBtn.innerHTML=`<i class="fa-solid fa-bag-shopping"></i> Agregar al carrito · ${fmt(total)}`;
+    },
+    addModalToCart(){
+      const p=CatState.modalProduct;if(!p)return;CatCart.add(p,CatState.modalType,CatState.modalQty);const labels={unit:'1 unidad',pack4:'Pack x4',pack8:'Pack x8'};
+      showCatToast(`${p.name} (${labels[CatState.modalType]}) agregado`,'🛍️');CatPage.closeModal();
+    },
+  };
+  document.addEventListener('DOMContentLoaded', CatPage.init);
+  </script>
+</body>
+</html>
