@@ -35,24 +35,33 @@
       align-items: center; justify-content: center;
     }
 
-    /* Fondo imagen + fallback cálido */
+    /* Fondo video + fallback café */
     .lnd-bg {
       position: absolute; inset: 0;
-      background-image: url('images/hero/1.jpg');
-      background-size: cover;
-      background-position: center 40%;
+      overflow: hidden;
       background-color: #3B1E0A;
+    }
+    .lnd-bg-video {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 40%;
     }
     /* Overlay oscuro para texto blanco */
     .lnd-bg::before {
       content: '';
       position: absolute; inset: 0;
+      z-index: 1;
       background: linear-gradient(168deg, rgba(22,9,3,.65) 0%, rgba(42,20,8,.50) 45%, rgba(18,7,2,.74) 100%);
     }
     /* Viñeta en bordes */
     .lnd-bg::after {
       content: '';
       position: absolute; inset: 0;
+      z-index: 2;
       background: radial-gradient(ellipse 130% 110% at 50% 50%, transparent 50%, rgba(10,4,1,.4) 100%);
     }
 
@@ -298,7 +307,11 @@
   <div class="lnd-wrap">
     <section class="lnd-hero" aria-label="Bienvenida">
 
-      <div class="lnd-bg" role="img" aria-label="Granola artesanal con frutos secos"></div>
+      <div class="lnd-bg" role="img" aria-label="Video de presentación">
+        <video class="lnd-bg-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+          <source src="video/intro.mp4" type="video/mp4" />
+        </video>
+      </div>
 
       <div class="lnd-content">
 
